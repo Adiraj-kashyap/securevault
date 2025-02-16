@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 
 // Firebase initialization
-const serviceAccount = require("./config/serviceAccountkey.json"); // Replace with your service account key
+const serviceAccount = require("./config/serviceAccountKey.json"); // Replace with your service account key
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://s3curevau1t-default-rtdb.firebaseio.com",
