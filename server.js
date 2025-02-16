@@ -94,28 +94,16 @@ app.delete("/passwords/:id", async (req, res) => {
 
 // Messages part starts here
 // Function to generate a random 6-digit code
-function generateChatId() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
 // Create Chat Endpoint
 app.post("/chats", async (req, res) => {
   const { user_email } = req.body;
   let chat_id = generateChatId();
-  // Ensure the generated chat_id is unique
   try {
-    const snapshot = await db
-      .ref("chats")
-      .orderByKey()
-      .equalTo(chat_id)
-      .once("value");
+    const snapshot = await db.ref("chats").child(chat_id).once("value");
     if (snapshot.exists()) {
-      chat_id = generateChatId(); // You might want to add a limit to the number of retries
+      chat_id = generateChatId();
     }
-    const newChatRef = await db
-      .ref("chats")
-      .child(chat_id)
-      .set({ creator_email: user_email });
+    await db.ref("chats").child(chat_id).set({ creator_email: user_email });
     res.json({ chat_id: chat_id });
   } catch (error) {
     console.error("Error creating chat:", error);
@@ -154,13 +142,14 @@ app.post("/messages", async (req, res) => {
   }
 });
 
-// Load Messages Endpoint
+// Load Messages Endpoint (for initial load)
 app.get("/messages/:chat_id", async (req, res) => {
   const { chat_id } = req.params;
   try {
     const snapshot = await db
       .ref(`messages/${chat_id}`)
       .orderByChild("timestamp")
+      .limitToLast(50)
       .once("value");
     let messages = [];
     snapshot.forEach((childSnapshot) => {
@@ -172,6 +161,10 @@ app.get("/messages/:chat_id", async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+
+function generateChatId() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);

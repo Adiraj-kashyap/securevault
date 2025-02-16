@@ -1,12 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta 
-
-```html file="secure-messaging.html"
-<!DOCTYPE html>
-<html lang="en">
-<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Messaging - SecureVault</title>
@@ -33,11 +27,11 @@
             </button>
           </div>
         </div>
-      </nav>
+    </nav>
 
     <main class="secure-messaging-container">
         <div class="container">
-            <h1 id="GoBack">Secure Messaging</h1>
+            <h1>Secure Messaging</h1>
             <div id="chatCodeDisplay" style="display: none; text-align: center; margin-bottom: 1rem;"></div>
             <div id="securityCodeForm">
                 <h2>Enter Security Code</h2>
@@ -51,12 +45,15 @@
                     <input type="text" id="messageInput" placeholder="Type your message...">
                     <button type="submit" class="btn btn-primary">Send</button>
                 </form>
+                <button id="leaveChatBtn" class="btn btn-secondary">Leave Chat</button>
             </div>
         </div>
     </main>
-
-    <script src="secure-messaging.js"></script>
     <script src="script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="secure-messaging.js"></script>
 </body>
 </html>
-
