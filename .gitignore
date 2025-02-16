@@ -1,3 +1,2 @@
 node_modules/
-/config/serviceAccountKey.json  # VERY IMPORTANT: Don't commit your service account key!
 .env
