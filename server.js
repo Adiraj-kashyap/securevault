@@ -5,7 +5,6 @@ const admin = require("firebase-admin"); // Firebase Admin SDK
 const path = require("path");
 require("dotenv").config();
 
-
 const app = express();
 const port = 3000;
 
@@ -16,7 +15,9 @@ app.use(express.static(path.join(__dirname, "public")));
 // Firebase initialization
 const serviceAccount = JSON.parse(
   Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_B64, "base64").toString("utf-8")
-);admin.initializeApp({
+);
+// const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://s3curevau1t-default-rtdb.firebaseio.com",
 });
