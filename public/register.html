@@ -10,6 +10,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <i data-lucide="shield"></i>
+                <span>SecureVault</span>
+            </a>
+            <div class="nav-links">
+
+                <button id="theme-toggle" class="btn btn-icon">
+                    <i data-lucide="sun" class="icon-sun"></i>
+                    <i data-lucide="moon" class="icon-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
@@ -38,10 +53,7 @@
                     <label for="confirmPassword">Confirm Password</label>
                     <div class="password-input">
                         <input type="password" id="confirmPassword" name="confirmPassword" required>
-                        <button type="button" class="toggle-password">
-                            <i data-lucide="eye" class="show-password"></i>
-                            <i data-lucide="eye-off" class="hide-password"></i>
-                        </button>
+
                     </div>
                 </div>
                 <div class="password-strength" id="passwordStrength">
@@ -56,5 +68,12 @@
         </div>
     </div>
     <script src="register.js"></script>
+    <script src="script.js"></script>
+    <!-- Add Firebase client SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+
 </body>
 </html>

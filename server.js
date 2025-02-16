@@ -1,198 +1,177 @@
-const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
-const bodyParser = require('body-parser');
-const cors = require('cors'); // Required for cross-origin requests
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const admin = require("firebase-admin"); // Firebase Admin SDK
+const path = require("path");
+require("dotenv").config();
 
 const app = express();
 const port = 3000;
 
 app.use(bodyParser.json());
 app.use(cors());
-const path = require("path");
-
-// Serve static files from the "public" folder
 app.use(express.static(path.join(__dirname, "public")));
 
+// Firebase initialization
+const serviceAccount = require("./config/serviceAccountKey.json"); // Replace with your service account key
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: process.env.DATABASE_URL,
+});
+const db = admin.database(); // Reference to the Firebase Realtime Database
 // Redirect root URL to index.html
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Database connection
-const db = new sqlite3.Database('./passwords.db', (err) => {
-  if (err) {
-    console.error(err.message);
+// API Endpoints
+// Passwords
+app.get("/passwords/:email", async (req, res) => {
+  const { email } = req.params;
+  const searchTerm = req.query.searchTerm || "";
+  try {
+    const snapshot = await db
+      .ref("passwords")
+      .orderByChild("user_email")
+      .equalTo(email)
+      .once("value");
+    let passwords = [];
+    snapshot.forEach((childSnapshot) => {
+      const password = childSnapshot.val();
+      if (
+        !searchTerm ||
+        password.siteName.includes(searchTerm) ||
+        password.username.includes(searchTerm)
+      ) {
+        passwords.push({ ...password, id: childSnapshot.key });
+      }
+    });
+    res.json(passwords);
+  } catch (error) {
+    console.error("Error fetching passwords:", error);
+    res.status(500).json({ error: error.message });
   }
-  console.log('Connected to the password database.');
 });
 
-// Create passwords table
-db.serialize(() => {
-  db.run('CREATE TABLE IF NOT EXISTS passwords (id INTEGER PRIMARY KEY AUTOINCREMENT, user_email TEXT, siteName TEXT, username TEXT, password TEXT)');
+app.post("/passwords", async (req, res) => {
+  const { user_email, siteName, username, password } = req.body;
+  try {
+    const newPasswordRef = await db
+      .ref("passwords")
+      .push({ user_email, siteName, username, password });
+    res.json({ id: newPasswordRef.key });
+  } catch (error) {
+    console.error("Error creating password:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// API Endpoints (see details below)
+app.put("/passwords/:id", async (req, res) => {
+  const { id } = req.params;
+  const { siteName, username, password } = req.body;
+  try {
+    await db.ref(`passwords/${id}`).update({ siteName, username, password });
+    res.json({ changes: 1 }); // Indicate success
+  } catch (error) {
+    console.error("Error updating password:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/passwords/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.ref(`passwords/${id}`).remove();
+    res.json({ changes: 1 }); // Indicate success
+  } catch (error) {
+    console.error("Error deleting password:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Messages part starts here
+// Function to generate a random 6-digit code
+function generateChatId() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Create Chat Endpoint
+app.post("/chats", async (req, res) => {
+  const { user_email } = req.body;
+  let chat_id = generateChatId();
+  // Ensure the generated chat_id is unique
+  try {
+    const snapshot = await db
+      .ref("chats")
+      .orderByKey()
+      .equalTo(chat_id)
+      .once("value");
+    if (snapshot.exists()) {
+      chat_id = generateChatId(); // You might want to add a limit to the number of retries
+    }
+    const newChatRef = await db
+      .ref("chats")
+      .child(chat_id)
+      .set({ creator_email: user_email });
+    res.json({ chat_id: chat_id });
+  } catch (error) {
+    console.error("Error creating chat:", error);
+    return res.status(500).json({ error: "Failed to create chat ID" });
+  }
+});
+
+// Join Chat Endpoint
+app.get("/chats/:chat_id", async (req, res) => {
+  const { chat_id } = req.params;
+  try {
+    const snapshot = await db.ref(`chats/${chat_id}`).once("value");
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: "Chat not found" });
+    }
+    res.json({ chat_id: chat_id });
+  } catch (error) {
+    console.error("Error getting chat:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Send Message Endpoint
+app.post("/messages", async (req, res) => {
+  const { chat_id, sender, content } = req.body;
+  try {
+    const newMessageRef = await db
+      .ref(`messages/${chat_id}`)
+      .push({
+        sender,
+        content,
+        timestamp: admin.database.ServerValue.TIMESTAMP,
+      });
+    res.json({ id: newMessageRef.key });
+  } catch (error) {
+    console.error("Error sending message:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Load Messages Endpoint
+app.get("/messages/:chat_id", async (req, res) => {
+  const { chat_id } = req.params;
+  try {
+    const snapshot = await db
+      .ref(`messages/${chat_id}`)
+      .orderByChild("timestamp")
+      .once("value");
+    let messages = [];
+    snapshot.forEach((childSnapshot) => {
+      messages.push({ id: childSnapshot.key, ...childSnapshot.val() });
+    });
+    res.json(messages);
+  } catch (error) {
+    console.error("Error loading messages:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });
-
-app.get('/passwords/:email', (req, res) => {
-    const { email } = req.params;
-    const searchTerm = req.query.searchTerm || ''; // Optional search term
-
-    let sql = 'SELECT * FROM passwords WHERE user_email = ?';
-    let params = [email];
-
-    if (searchTerm) {
-      sql += ' AND (siteName LIKE ? OR username LIKE ?)';
-      params.push(`%${searchTerm}%`, `%${searchTerm}%`);
-    }
-
-    db.all(sql, params, (err, rows) => {
-      if (err) {
-        console.error(err.message);
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json(rows);
-    });
-  });
-
-  app.post('/passwords', (req, res) => {
-    const { user_email, siteName, username, password } = req.body;
-    const sql = 'INSERT INTO passwords (user_email, siteName, username, password) VALUES (?, ?, ?, ?)';
-    const params = [user_email, siteName, username, password];
-
-    db.run(sql, params, function (err) {
-      if (err) {
-        console.error(err.message);
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json({ id: this.lastID });
-    });
-  });
-  app.put('/passwords/:id', (req, res) => {
-    const { id } = req.params;
-    const { siteName, username, password } = req.body;
-    const sql = 'UPDATE passwords SET siteName = ?, username = ?, password = ? WHERE id = ?';
-    const params = [siteName, username, password, id];
-
-    db.run(sql, params, function (err) {
-      if (err) {
-        console.error(err.message);
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json({ changes: this.changes });
-    });
-  });
-
-  app.delete('/passwords/:id', (req, res) => {
-    const { id } = req.params;
-    const sql = 'DELETE FROM passwords WHERE id = ?';
-    const params = [id];
-
-    db.run(sql, params, function (err) {
-      if (err) {
-        console.error(err.message);
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json({ changes: this.changes });
-    });
-  });
-
-
-
-
-
-
-
-
-
-  //Messages part starts here
-
-
-  // server.js (additions)
-
-// Function to generate a random 6-digit code
-function generateChatId() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-// Create Chat Endpoint
-app.post('/chats', (req, res) => {
-    const { user_email } = req.body;
-    let chat_id = generateChatId();
-
-    // Ensure the generated chat_id is unique
-    const checkChatIdSql = 'SELECT chat_id FROM chats WHERE chat_id = ?';
-    db.get(checkChatIdSql, [chat_id], (err, row) => {
-        if (err) {
-            console.error(err.message);
-            return res.status(500).json({ error: 'Failed to generate chat ID' });
-        }
-
-        if (row) {
-            // If the chat_id already exists, generate a new one recursively
-            chat_id = generateChatId(); // You might want to add a limit to the number of retries
-        }
-        
-        const sql = 'INSERT INTO chats (chat_id, creator_email) VALUES (?, ?)';
-        db.run(sql, [chat_id, user_email], function(err) {
-            if (err) {
-                console.error(err.message);
-                return res.status(500).json({ error: err.message });
-            }
-            res.json({ chat_id: chat_id });
-        });
-    });
-});
-
-
-
-// Join Chat Endpoint
-app.get('/chats/:chat_id', (req, res) => {
-    const { chat_id } = req.params;
-    const sql = 'SELECT chat_id FROM chats WHERE chat_id = ?';
-    db.get(sql, [chat_id], (err, row) => {
-        if (err) {
-            console.error(err.message);
-            return res.status(500).json({ error: err.message });
-        }
-        if (!row) {
-            return res.status(404).json({ error: 'Chat not found' });
-        }
-        res.json({ chat_id: row.chat_id });
-    });
-});
-
-
-// Send Message Endpoint
-app.post('/messages', (req, res) => {
-    const { chat_id, sender, content } = req.body;
-    const sql = 'INSERT INTO messages (chat_id, sender, content) VALUES (?, ?, ?)';
-    db.run(sql, [chat_id, sender, content], function(err) {
-        if (err) {
-            console.error(err.message);
-            return res.status(500).json({ error: err.message });
-        }
-        res.json({ id: this.lastID });
-    });
-});
-
-// Load Messages Endpoint
-app.get('/messages/:chat_id', (req, res) => {
-    const { chat_id } = req.params;
-    const sql = 'SELECT id, sender, content, timestamp FROM messages WHERE chat_id = ? ORDER BY timestamp ASC';  //Order by timestamp for chronological order
-    db.all(sql, [chat_id], (err, rows) => {
-        if (err) {
-            console.error(err.message);
-            return res.status(500).json({ error: err.message });
-        }
-        res.json(rows);
-    });
-});
-
