@@ -13,10 +13,10 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 
 // Firebase initialization
-const serviceAccount = require("./config/serviceAccountKey.json"); // Replace with your service account key
+const serviceAccount = require("./config/serviceAccountkey.json"); // Replace with your service account key
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: process.env.DATABASE_URL,
+  databaseURL: "https://s3curevau1t-default-rtdb.firebaseio.com",
 });
 const db = admin.database(); // Reference to the Firebase Realtime Database
 // Redirect root URL to index.html
@@ -139,13 +139,11 @@ app.get("/chats/:chat_id", async (req, res) => {
 app.post("/messages", async (req, res) => {
   const { chat_id, sender, content } = req.body;
   try {
-    const newMessageRef = await db
-      .ref(`messages/${chat_id}`)
-      .push({
-        sender,
-        content,
-        timestamp: admin.database.ServerValue.TIMESTAMP,
-      });
+    const newMessageRef = await db.ref(`messages/${chat_id}`).push({
+      sender,
+      content,
+      timestamp: admin.database.ServerValue.TIMESTAMP,
+    });
     res.json({ id: newMessageRef.key });
   } catch (error) {
     console.error("Error sending message:", error);
