@@ -5,6 +5,7 @@ const admin = require("firebase-admin"); // Firebase Admin SDK
 const path = require("path");
 require("dotenv").config();
 
+
 const app = express();
 const port = 3000;
 
@@ -13,7 +14,7 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 
 // Firebase initialization
-const serviceAccount = require("./config/serviceAccountKey.json"); // Replace with your service account key
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://s3curevau1t-default-rtdb.firebaseio.com",
