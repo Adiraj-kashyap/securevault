@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
   })
 
   // Load passwords from server
-  async function loadPasswords() {
+  async function loadPasswords(searchTerm = "") {
     const session = JSON.parse(localStorage.getItem("session"));
     if (!session || !session.email) {
       showStatus("Session expired. Please login again.", "error")
@@ -126,11 +126,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const email = session.email;
-    const searchTerm = searchInput.value.toLowerCase();
  
     try {
       showStatus("Loading passwords...", "info")
-      const response = await fetch(`http://localhost:3000/passwords/${email}?searchTerm=${searchTerm}`);
+      const response = await fetch(`/passwords/${email}?searchTerm=${searchTerm}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -209,7 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const email = session.email;
  
     try {
-      const response = await fetch("http://localhost:3000/passwords", {
+      const response = await fetch("/passwords", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -231,7 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Update an existing password
   async function updatePassword(id, siteName, username, password) {
     try {
-      const response = await fetch(`http://localhost:3000/passwords/${id}`, {
+      const response = await fetch(`/passwords/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -275,7 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function deletePassword(id) {
     if (confirm("Are you sure you want to delete this password?")) {
       try {
-        const response = await fetch(`http://localhost:3000/passwords/${id}`, {
+        const response = await fetch(`/passwords/${id}`, {
           method: "DELETE",
         });
  

@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             encryptionKey = generateEncryptionKey();
             
-            const response = await fetch("http://localhost:3000/chats", {
+            const response = await fetch("/chats", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             showStatus("Joining chat...", "info");
             const response = await fetch(
-                `http://localhost:3000/chats/${securityCode}`
+                `/chats/${securityCode}`
             );
             
             if (!response.ok) {
@@ -234,7 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 messageData.destructAt = destructAt;
             }
             
-            const response = await fetch("http://localhost:3000/messages", {
+            const response = await fetch("/messages", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -258,7 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         try {
             const response = await fetch(
-                `http://localhost:3000/messages/${currentChatId}`
+                `/messages/${currentChatId}`
             );
             
             if (!response.ok) {
