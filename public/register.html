@@ -6,29 +6,41 @@
     <title>Register - SecureVault</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="auth.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
-    <nav class="navbar">
+    <header>
         <div class="container">
-            <a href="index.html" class="logo">
-                <i data-lucide="shield"></i>
-                <span>SecureVault</span>
-            </a>
-            <div class="nav-links">
-
-                <button id="theme-toggle" class="btn btn-icon">
-                    <i data-lucide="sun" class="icon-sun"></i>
-                    <i data-lucide="moon" class="icon-moon"></i>
+            <nav>
+                <a href="index.html" class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>SecureVault</span>
+                </a>
+                <button class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
                 </button>
-            </div>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="index.html#features" class="nav-link">Features</a>
+                    <a href="contactus.html" class="nav-link">Contact</a>
+                    <a href="feedback.html" class="nav-link">Feedback</a>
+                    <button id="theme-toggle" class="btn btn-icon">
+                        <i class="fas fa-sun icon-sun"></i>
+                        <i class="fas fa-moon icon-moon"></i>
+                    </button>
+                </div>
+            </nav>
         </div>
-    </nav>
+    </header>
+
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
-                <i data-lucide="shield" class="auth-icon"></i>
+                <i class="fas fa-shield-alt auth-icon"></i>
                 <h1>Create Account</h1>
                 <p>Set up your secure vault account</p>
             </div>
@@ -44,8 +56,8 @@
                                pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$"
                                title="Password must be at least 8 characters long and include letters, numbers, and special characters">
                         <button type="button" class="toggle-password">
-                            <i data-lucide="eye" class="show-password"></i>
-                            <i data-lucide="eye-off" class="hide-password"></i>
+                            <i class="fas fa-eye show-password"></i>
+                            <i class="fas fa-eye-slash hide-password"></i>
                         </button>
                     </div>
                 </div>
@@ -53,30 +65,55 @@
                     <label for="confirmPassword">Confirm Password</label>
                     <div class="password-input">
                         <input type="password" autocomplete="new-password" id="confirmPassword" name="confirmPassword" required>
-
                     </div>
                 </div>
                 <div class="password-strength" id="passwordStrength">
                     <div class="strength-bar"></div>
                     <span class="strength-text">Password Strength: Weak</span>
                 </div>
+                <div class="form-status" id="registerStatus"></div>
                 <button type="submit" class="btn btn-primary btn-block">Create Account</button>
                 <div class="auth-links">
                     <a href="auth.html">Already have an account? Sign in</a>
                 </div>
             </form>
+            
+            <div class="auth-divider">
+                <span>OR</span>
+            </div>
+            
+            <div class="social-auth">
+                <button id="googleSignUp" class="btn btn-social btn-google">
+                    <i class="fab fa-google"></i>
+                    <span>Sign up with Google</span>
+                </button>
+            </div>
         </div>
     </div>
-    <script src="script.js"></script>
 
-    
-    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
-    <!-- Firebase Config -->
-    <script src="firebase-config.js"></script>
-    
-    <!-- Register JS -->
-    <script src="register.js"></script>    <!-- Add Firebase client SDK -->
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2023 SecureVault. All rights reserved.</p>
+                
+                <div class="footer-social">
+                    <a href="#" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="register.js"></script>
 </body>
 </html>

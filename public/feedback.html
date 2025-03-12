@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback - SecureVault</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="feedback.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>SecureVault</span>
+                </a>
+                <button class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="index.html#features" class="nav-link">Features</a>
+                    <a href="contactus.html" class="nav-link">Contact</a>
+                    <a href="feedback.html" class="nav-link">Feedback</a>
+                    <button id="theme-toggle" class="btn btn-icon">
+                        <i class="fas fa-sun icon-sun"></i>
+                        <i class="fas fa-moon icon-moon"></i>
+                    </button>
+                </div>
+            </nav>
+        </div>
+    </header>
+    <main>
+        <!-- Hero Section -->
+        <section class="feedback-hero">
+            <div class="container">
+                <h1>Your Feedback Matters</h1>
+                <p>Help us improve SecureVault by sharing your experience and suggestions. Your input directly shapes our future updates.</p>
+            </div>
+        </section>
+
+        <!-- Feedback Section -->
+        <section class="feedback-section">
+            <div class="container">
+                <div class="feedback-grid">
+                    <div class="feedback-info">
+                        <h2>Why Your Feedback Is Important</h2>
+                        <p>At SecureVault, we're committed to continuous improvement. Your feedback helps us understand what's working well and what needs enhancement.</p>
+                        
+                        <div class="feedback-benefits">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-lightbulb"></i>
+                                </div>
+                                <div class="benefit-content">
+                                    <h3>Shape Our Product</h3>
+                                    <p>Your suggestions directly influence our product roadmap and feature development.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div class="benefit-content">
+                                    <h3>Enhance Security</h3>
+                                    <p>Help us identify potential security improvements to better protect your data.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-user-friends"></i>
+                                </div>
+                                <div class="benefit-content">
+                                    <h3>Improve User Experience</h3>
+                                    <p>Your experience matters - tell us how we can make SecureVault more intuitive and user-friendly.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="testimonials">
+                            <h3>What Others Are Saying</h3>
+                            <div class="testimonial-slider">
+                                <div class="testimonial-item active">
+                                    <div class="testimonial-content">
+                                        <p>"SecureVault has completely transformed how I manage my passwords. The team was incredibly responsive to my feature suggestions!"</p>
+                                    </div>
+                                    <div class="testimonial-author">
+                                        <div class="author-avatar">
+                                            <img src="assets/avatar-1.jpg" alt="User Avatar" onerror="this.src='https://via.placeholder.com/40'">
+                                        </div>
+                                        <div class="author-info">
+                                            <h4>Sarah Johnson</h4>
+                                            <p>Product Manager</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="testimonial-item">
+                                    <div class="testimonial-content">
+                                        <p>"I suggested adding the self-destructing messages feature, and they implemented it within weeks. It's great to see a company that actually listens."</p>
+                                    </div>
+                                    <div class="testimonial-author">
+                                        <div class="author-avatar">
+                                            <img src="assets/avatar-2.jpg" alt="User Avatar" onerror="this.src='https://via.placeholder.com/40'">
+                                        </div>
+                                        <div class="author-info">
+                                            <h4>Michael Chen</h4>
+                                            <p>Cybersecurity Analyst</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="testimonial-item">
+                                    <div class="testimonial-content">
+                                        <p>"The multi-factor authentication feature I recommended has made my account so much more secure. Thank you for taking user feedback seriously!"</p>
+                                    </div>
+                                    <div class="testimonial-author">
+                                        <div class="author-avatar">
+                                            <img src="assets/avatar-3.jpg" alt="User Avatar" onerror="this.src='https://via.placeholder.com/40'">
+                                        </div>
+                                        <div class="author-info">
+                                            <h4>Emily Rodriguez</h4>
+                                            <p>Software Engineer</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="testimonial-controls">
+                                <button class="testimonial-prev" aria-label="Previous testimonial">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <div class="testimonial-dots">
+                                    <button class="dot active" data-index="0" aria-label="Testimonial 1"></button>
+                                    <button class="dot" data-index="1" aria-label="Testimonial 2"></button>
+                                    <button class="dot" data-index="2" aria-label="Testimonial 3"></button>
+                                </div>
+                                <button class="testimonial-next" aria-label="Next testimonial">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feedback-form-container">
+                        <h2>Share Your Thoughts</h2>
+                        <div class="form-status"></div>
+                        <form id="feedbackForm" class="feedback-form">
+                            <div class="form-group">
+                                <label for="name">Your Name</label>
+                                <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="feedbackType">Feedback Type</label>
+                                <select id="feedbackType" name="feedbackType" required>
+                                    <option value="" disabled selected>Select feedback type</option>
+                                    <option value="general">General Feedback</option>
+                                    <option value="bug">Bug Report</option>
+                                    <option value="feature">Feature Request</option>
+                                    <option value="usability">Usability Issue</option>
+                                    <option value="security">Security Concern</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Rate Your Overall Experience</label>
+                                <div class="rating-container">
+                                    <div class="rating">
+                                        <input type="radio" id="star5" name="rating" value="5" required>
+                                        <label for="star5" title="5 stars"><i class="fas fa-star"></i></label>
+                                        
+                                        <input type="radio" id="star4" name="rating" value="4">
+                                        <label for="star4" title="4 stars"><i class="fas fa-star"></i></label>
+                                        
+                                        <input type="radio" id="star3" name="rating" value="3">
+                                        <label for="star3" title="3 stars"><i class="fas fa-star"></i></label>
+                                        
+                                        <input type="radio" id="star2" name="rating" value="2">
+                                        <label for="star2" title="2 stars"><i class="fas fa-star"></i></label>
+                                        
+                                        <input type="radio" id="star1" name="rating" value="1">
+                                        <label for="star1" title="1 star"><i class="fas fa-star"></i></label>
+                                    </div>
+                                    <span class="rating-text">Select a rating</span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="feedback">Your Feedback</label>
+                                <textarea id="feedback" name="feedback" placeholder="Please share your experience, suggestions, or report issues..." required></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Which features do you use most?</label>
+                                <div class="checkbox-list">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="featurePasswords" name="features" value="passwords">
+                                        <label for="featurePasswords">Password Manager</label>
+                                    </div>
+                                    
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="featureMessaging" name="features" value="messaging">
+                                        <label for="featureMessaging">Secure Messaging</label>
+                                    </div>
+                                    
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="featureBackup" name="features" value="backup">
+                                        <label for="featureBackup">Auto Backup</label>
+                                    </div>
+                                    
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="feature2FA" name="features" value="2fa">
+                                        <label for="feature2FA">Two-Factor Authentication</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="improvements">What could we improve?</label>
+                                <textarea id="improvements" name="improvements" placeholder="Any specific suggestions for improvement..."></textarea>
+                            </div>
+                            
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="contactConsent" name="contactConsent">
+                                <label for="contactConsent">I'm willing to be contacted about my feedback if needed.</label>
+                            </div>
+                            
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="privacyAgreed" name="privacyAgreed" required>
+                                <label for="privacyAgreed">I agree to the <a href="#">Privacy Policy</a> and consent to having my feedback data processed.</label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-paper-plane"></i>
+                                Submit Feedback
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Request Section -->
+        <section class="feature-request-section">
+            <div class="container">
+                <h2>Popular Feature Requests</h2>
+                <p>See what features other users are requesting and vote for your favorites.</p>
+                
+                <div class="feature-request-grid">
+                    <div class="feature-request-card">
+                        <div class="feature-votes">
+                            <button class="vote-btn" data-feature="password-sharing">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <span class="vote-count">142</span>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Password Sharing</h3>
+                            <p>Securely share passwords with family members or team colleagues with granular permission controls.</p>
+                            <div class="feature-status planning">
+                                <i class="fas fa-clock"></i>
+                                <span>Planning</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-request-card">
+                        <div class="feature-votes">
+                            <button class="vote-btn" data-feature="biometric-login">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <span class="vote-count">98</span>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Biometric Login</h3>
+                            <p>Add support for fingerprint and face recognition authentication on compatible devices.</p>
+                            <div class="feature-status in-progress">
+                                <i class="fas fa-cog"></i>
+                                <span>In Progress</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-request-card">
+                        <div class="feature-votes">
+                            <button class="vote-btn" data-feature="dark-mode">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <span class="vote-count">87</span>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Enhanced Dark Mode</h3>
+                            <p>Improved dark mode with customizable accent colors and better contrast ratios.</p>
+                            <div class="feature-status completed">
+                                <i class="fas fa-check"></i>
+                                <span>Completed</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-request-card">
+                        <div class="feature-votes">
+                            <button class="vote-btn" data-feature="password-health">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <span class="vote-count">76</span>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Password Health Dashboard</h3>
+                            <p>A comprehensive dashboard showing password strength, age, and potential security issues.</p>
+                            <div class="feature-status planning">
+                                <i class="fas fa-clock"></i>
+                                <span>Planning</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feature-request-cta">
+                    <a href="#" class="btn btn-secondary">
+                        <i class="fas fa-plus"></i>
+                        Suggest New Feature
+                    </a>
+                    <a href="#" class="btn btn-outline">
+                        <i class="fas fa-list"></i>
+                        View All Requests
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="index.html" class="logo">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>SecureVault</span>
+                    </a>
+                    <p>Your trusted partner for secure password management, encrypted messaging, and digital identity protection.</p>
+                </div>
+                
+                <div class="footer-links">
+                    <div class="footer-links-column">
+                        <h3>Product</h3>
+                        <ul>
+                            <li><a href="#">Password Manager</a></li>
+                            <li><a href="#">Secure Messaging</a></li>
+                            <li><a href="#">Data Protection</a></li>
+                            <li><a href="#">Multi-Factor Auth</a></li>
+                            <li><a href="#">Pricing</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-links-column">
+                        <h3>Company</h3>
+                        <ul>
+                            <li><a href="#">About Us</a></li>
+                            <li><a href="#">Careers</a></li>
+                            <li><a href="#">Press</a></li>
+                            <li><a href="#">Blog</a></li>
+                            <li><a href="#">Partners</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-links-column">
+                        <h3>Support</h3>
+                        <ul>
+                            <li><a href="#">Help Center</a></li>
+                            <li><a href="contactus.html">Contact Us</a></li>
+                            <li><a href="#">Community</a></li>
+                            <li><a href="#">Status</a></li>
+                            <li><a href="#">Developer API</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-links-column">
+                        <h3>Legal</h3>
+                        <ul>
+                            <li><a href="#">Privacy Policy</a></li>
+                            <li><a href="#">Terms of Service</a></li>
+                            <li><a href="#">Cookie Policy</a></li>
+                            <li><a href="#">GDPR Compliance</a></li>
+                            <li><a href="#">Security</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+           
+            </div>
+        </div>
+    </footer>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2023 SecureVault. All rights reserved.</p>
+                
+                <div class="footer-social">
+                    <a href="#" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+    <script src="feedback.js"></script>
+</body>
+</html> 

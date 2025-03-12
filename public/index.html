@@ -5,80 +5,265 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureVault - Password Manager & Secure Messaging</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
-    <nav class="navbar">
+    
+    <header>
         <div class="container">
-            <a href="index.html" class="logo">
-                <i data-lucide="shield"></i>
-                <span>SecureVault</span>
-            </a>
-            <div class="nav-links">
-                <a href="auth.html" class="btn btn-ghost">Login</a>
-                <a href="register.html" class="btn btn-primary">Get Started</a>
-                <button id="theme-toggle" class="btn btn-icon">
-                    <i data-lucide="sun" class="icon-sun"></i>
-                    <i data-lucide="moon" class="icon-moon"></i>
+            <nav>
+                <a href="index.html" class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>SecureVault</span>
+                </a>
+                <button class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
                 </button>
-            </div>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="#features" class="nav-link">Features</a>
+                    <a href="contactus.html" class="nav-link">Contact</a>
+                    <a href="feedback.html" class="nav-link">Feedback</a>
+                    <a href="auth.html" class="nav-link auth-link login-link">Login</a>
+                    <!-- <a href="dashboard.html" class="nav-link auth-link dashboard-link" style="display: none;">Dashboard</a> -->
+                    <div class="profile-dropdown">
+                        <button class="profile-btn">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </button>
+                        <div class="profile-dropdown-content">
+                            <div class="profile-header">
+                                <div class="profile-avatar-large">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="profile-info">
+                                    <h4 id="profile-name">User Name</h4>
+                                    <p id="profile-email">user@example.com</p>
+                                </div>
+                            </div>
+                            <div class="profile-links">
+                                <a href="dashboard.html">
+                                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                                </a>
+                                <a href="settings.html">
+                                    <i class="fas fa-cog"></i> Settings
+                                </a>
+                                <a href="#" id="logout-btn">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="theme-toggle" class="btn btn-icon">
+                        <i class="fas fa-sun icon-sun"></i>
+                        <i class="fas fa-moon icon-moon"></i>
+                    </button>
+                    <a href="auth.html" class="btn btn-primary get-started-btn">Get Started</a>
+                    <a href="dashboard.html" class="btn btn-primary dashboard-btn" style="display: none;">Dashboard</a>
+                </div>
+            </nav>
         </div>
-    </nav>
+    </header>
 
     <main>
         <section class="hero">
             <div class="container">
                 <div class="badge">
-                    <i data-lucide="shield"></i>
+                    <i class="fas fa-shield-alt"></i>
                     <span>Your Security is Our Priority</span>
                 </div>
                 <h1>Secure Password Management & Encrypted Messaging</h1>
                 <p>Keep your passwords safe and communicate securely. Military-grade encryption for your digital life with end-to-end protection.</p>
                 <div class="cta-buttons">
                     <a href="password-manager.html" class="btn btn-primary btn-lg">
-                        <i data-lucide="lock"></i>
+                        <i class="fas fa-lock"></i>
                         Start Securing Passwords
                     </a>
                     <a href="secure-messaging.html" class="btn btn-outline btn-lg">
-                        <i data-lucide="message-square"></i>
+                        <i class="fas fa-comment"></i>
                         Try Secure Messaging
                     </a>
                 </div>
             </div>
         </section>
 
-        <section class="features">
+        <section id="features" class="features">
             <div class="container">
+                <h2 class="section-title">Key Features</h2>
+                <p class="section-description">Discover the powerful features that make SecureVault the ultimate security solution for your digital life.</p>
                 <div class="feature-grid">
                     <div class="feature-card">
-                        <i data-lucide="lock"></i>
+                        <div class="feature-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
                         <h3>Password Manager</h3>
                         <p>Store and manage your passwords securely with military-grade encryption.</p>
                     </div>
                     <div class="feature-card">
-                        <i data-lucide="message-square"></i>
+                        <div class="feature-icon">
+                            <i class="fas fa-comment-dots"></i>
+                        </div>
                         <h3>Secure Messaging</h3>
                         <p>End-to-end encrypted messaging with self-destructing messages.</p>
                     </div>
                     <div class="feature-card">
-                        <i data-lucide="key"></i>
+                        <div class="feature-icon">
+                            <i class="fas fa-key"></i>
+                        </div>
                         <h3>Master Password</h3>
                         <p>One master password to secure all your credentials.</p>
                     </div>
                     <div class="feature-card">
-                        <i data-lucide="shield"></i>
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
                         <h3>Data Protection</h3>
                         <p>Your data is encrypted and only accessible by you.</p>
                     </div>
                     <div class="feature-card">
-                        <i data-lucide="refresh-cw"></i>
+                        <div class="feature-icon">
+                            <i class="fas fa-sync-alt"></i>
+                        </div>
                         <h3>Auto Backup</h3>
                         <p>Automatic encrypted backups to keep your data safe.</p>
                     </div>
                     <div class="feature-card">
-                        <i data-lucide="user-check"></i>
+                        <div class="feature-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
                         <h3>Multi-Factor Auth</h3>
                         <p>Additional security layer with multi-factor authentication.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="security-section">
+            <div class="container">
+                <div class="security-grid">
+                    <div class="security-content">
+                        <h2>Military-Grade Security</h2>
+                        <p>SecureVault uses AES-256 encryption, the same standard used by governments and military organizations worldwide to protect sensitive data.</p>
+                        <ul class="security-features">
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>End-to-end encryption</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Zero-knowledge architecture</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Biometric authentication support</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Automatic timeout protection</span>
+                            </li>
+                        </ul>
+                        <a href="#" class="btn btn-secondary">Learn More About Our Security</a>
+                    </div>
+                    <div class="security-image">
+                        <div class="placeholder-image security-placeholder">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Security Illustration</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="testimonials-section">
+            <div class="container">
+                <h2 class="section-title">Trusted by Thousands</h2>
+                <p class="section-description">See what our users have to say about SecureVault</p>
+                
+                <div class="testimonial-slider">
+                    <div class="testimonial-item active">
+                        <div class="testimonial-content">
+                            <p>"SecureVault has completely transformed how I manage my passwords. I feel so much more secure knowing my data is protected with military-grade encryption."</p>
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <div class="placeholder-avatar">SJ</div>
+                            </div>
+                            <div class="author-info">
+                                <h4>Sarah Johnson</h4>
+                                <p>Product Manager</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="testimonial-item">
+                        <div class="testimonial-content">
+                            <p>"As a cybersecurity professional, I'm extremely cautious about the tools I use. SecureVault meets all my requirements for a secure password manager and messaging platform."</p>
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <div class="placeholder-avatar">MC</div>
+                            </div>
+                            <div class="author-info">
+                                <h4>Michael Chen</h4>
+                                <p>Cybersecurity Analyst</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="testimonial-item">
+                        <div class="testimonial-content">
+                            <p>"The secure messaging feature is a game-changer. I can now communicate sensitive information with my team without worrying about data breaches."</p>
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <div class="placeholder-avatar">ER</div>
+                            </div>
+                            <div class="author-info">
+                                <h4>Emily Rodriguez</h4>
+                                <p>Software Engineer</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-controls">
+                    <button class="testimonial-prev" aria-label="Previous testimonial">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="testimonial-dots">
+                        <button class="dot active" data-index="0" aria-label="Testimonial 1"></button>
+                        <button class="dot" data-index="1" aria-label="Testimonial 2"></button>
+                        <button class="dot" data-index="2" aria-label="Testimonial 3"></button>
+                    </div>
+                    <button class="testimonial-next" aria-label="Next testimonial">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <div class="container">
+                <h2>Ready to Secure Your Digital Life?</h2>
+                <p>Join thousands of users who trust SecureVault for their password management and secure communication needs.</p>
+                <a href="auth.html" class="btn btn-primary btn-lg cta-main-btn">Get Started for Free</a>
+                <a href="dashboard.html" class="btn btn-primary btn-lg cta-dashboard-btn" style="display: none;">Go to Dashboard</a>
+                <div class="cta-features">
+                    <div class="cta-feature">
+                        <i class="fas fa-check"></i>
+                        <span>No credit card required</span>
+                    </div>
+                    <div class="cta-feature">
+                        <i class="fas fa-check"></i>
+                        <span>Free basic plan</span>
+                    </div>
+                    <div class="cta-feature">
+                        <i class="fas fa-check"></i>
+                        <span>Cancel anytime</span>
                     </div>
                 </div>
             </div>
@@ -87,23 +272,86 @@
 
     <footer>
         <div class="container">
-            <div class="footer-logo">
-                <i data-lucide="shield"></i>
-                <span>SecureVault</span>
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="index.html" class="logo">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>SecureVault</span>
+                    </a>
+                    <p>Your trusted partner for secure password management, encrypted messaging, and digital identity protection.</p>
+                </div>
+                
+                <div class="footer-links">
+                    <div class="footer-links-column">
+                        <h3>Product</h3>
+                        <ul>
+                            <li><a href="#">Password Manager</a></li>
+                            <li><a href="#">Secure Messaging</a></li>
+                            <li><a href="#">Data Protection</a></li>
+                            <li><a href="#">Multi-Factor Auth</a></li>
+                            <li><a href="#">Pricing</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-links-column">
+                        <h3>Company</h3>
+                        <ul>
+                            <li><a href="#">About Us</a></li>
+                            <li><a href="#">Careers</a></li>
+                            <li><a href="#">Press</a></li>
+                            <li><a href="#">Blog</a></li>
+                            <li><a href="#">Partners</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-links-column">
+                        <h3>Support</h3>
+                        <ul>
+                            <li><a href="#">Help Center</a></li>
+                            <li><a href="contactus.html">Contact Us</a></li>
+                            <li><a href="feedback.html">Feedback</a></li>
+                            <li><a href="#">Status</a></li>
+                            <li><a href="#">Developer API</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-links-column">
+                        <h3>Legal</h3>
+                        <ul>
+                            <li><a href="#">Privacy Policy</a></li>
+                            <li><a href="#">Terms of Service</a></li>
+                            <li><a href="#">Cookie Policy</a></li>
+                            <li><a href="#">GDPR Compliance</a></li>
+                            <li><a href="#">Security</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-            <nav class="footer-nav">
-                <a href="#">Privacy</a>
-                <a href="#">Terms</a>
-                <a href="contactus.html">Contact</a>
-            </nav>
+        </div>
+    </footer>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2023 SecureVault. All rights reserved.</p>
+                
+                <div class="footer-social">
+                    <a href="#" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
         </div>
     </footer>
 
-    <script src="script.js"></script>
-    <!-- Add Firebase client SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
-
+    <script src="home.js"></script>
 </body>
 </html>

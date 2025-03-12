@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize Lucide icons
-    lucide.createIcons();
-
+    // Remove Lucide icons initialization
+    
     // Theme toggle functionality
     const themeToggle = document.getElementById('theme-toggle');
     const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
@@ -29,5 +28,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for system theme changes
     prefersDarkScheme.addEventListener('change', (e) => {
         setTheme(e.matches ? 'dark' : 'light');
+    });
+
+    // Handle logo click to redirect to dashboard if logged in
+    const logoLinks = document.querySelectorAll('.logo');
+    logoLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            const session = JSON.parse(localStorage.getItem('session'));
+            if (session && session.uid) {
+                e.preventDefault();
+                window.location.href = 'dashboard.html';
+            }
+        });
     });
 });

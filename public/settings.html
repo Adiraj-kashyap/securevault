@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - SecureVault</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="settings.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <i data-lucide="shield"></i>
+                <span>SecureVault</span>
+            </a>
+            <div class="nav-links">
+                <a href="dashboard.html" class="btn btn-primary">Dashboard</a>
+                <button id="logoutBtn" class="btn btn-ghost">
+                    <i data-lucide="log-out"></i>
+                    Logout
+                </button>
+                <button id="theme-toggle" class="btn btn-icon">
+                    <i data-lucide="sun" class="icon-sun"></i>
+                    <i data-lucide="moon" class="icon-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="settings-container">
+        <div class="container">
+            <h1>Security Settings</h1>
+            <div id="statusMessage" class="status-message" style="display: none;"></div>
+
+            <div class="settings-layout">
+                <!-- Side Navigation -->
+                <div class="settings-sidebar">
+                    <ul class="settings-nav">
+                        <li>
+                            <a href="#account-security" class="settings-nav-item active">
+                                <i data-lucide="user-cog"></i>
+                                <span>Account Security</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#data-protection" class="settings-nav-item">
+                                <i data-lucide="shield"></i>
+                                <span>Data Protection</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#privacy-sessions" class="settings-nav-item">
+                                <i data-lucide="eye-off"></i>
+                                <span>Privacy & Sessions</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#master-password" class="settings-nav-item">
+                                <i data-lucide="key"></i>
+                                <span>Master Password</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#two-factor-auth" class="settings-nav-item">
+                                <i data-lucide="user-check"></i>
+                                <span>Two-Factor Auth</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#auto-backup" class="settings-nav-item">
+                                <i data-lucide="refresh-cw"></i>
+                                <span>Auto Backup</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Main Content -->
+                <div class="settings-grid">
+                    <!-- Account Security Section -->
+                    <div id="account-security" class="settings-section">
+                        <h2><i data-lucide="user-cog"></i> Account Security</h2>
+                        
+                        <!-- Master Password -->
+                        <div id="master-password" class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>Master Password</h3>
+                                <span class="settings-badge secure">Secure</span>
+                            </div>
+                            <p>Change your master password. We recommend updating it every 90 days.</p>
+                            <button id="changeMasterPasswordBtn" class="btn btn-secondary">Change Password</button>
+                        </div>
+
+                        <!-- Two-Factor Authentication -->
+                        <div id="two-factor-auth" class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>Two-Factor Authentication</h3>
+                                <span id="2faStatus" class="settings-badge warning">Disabled</span>
+                            </div>
+                            <p>Add an extra layer of security to your account with 2FA.</p>
+                            <button id="setup2FABtn" class="btn btn-secondary">Setup 2FA</button>
+                        </div>
+
+                        <!-- Recovery Options -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>Recovery Options</h3>
+                                <span id="recoveryStatus" class="settings-badge warning">Not Set</span>
+                            </div>
+                            <p>Set up recovery methods in case you forget your password.</p>
+                            <button id="setupRecoveryBtn" class="btn btn-secondary">Setup Recovery</button>
+                        </div>
+                    </div>
+
+                    <!-- Data Protection Section -->
+                    <div id="data-protection" class="settings-section">
+                        <h2><i data-lucide="shield"></i> Data Protection</h2>
+                        
+                        <!-- Encryption Settings -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>Encryption Settings</h3>
+                                <span class="settings-badge secure">AES-256</span>
+                            </div>
+                            <p>Your data is encrypted with military-grade encryption.</p>
+                            <div class="settings-option">
+                                <label for="encryptionLevel">Encryption Level:</label>
+                                <select id="encryptionLevel" disabled>
+                                    <option value="aes256" selected>AES-256 (Recommended)</option>
+                                    <option value="aes128">AES-128</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Auto Backup -->
+                        <div id="auto-backup" class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>Auto Backup</h3>
+                                <span id="backupStatus" class="settings-badge warning">Disabled</span>
+                            </div>
+                            <p>Automatically backup your encrypted data to secure cloud storage.</p>
+                            <div class="settings-option">
+                                <label for="backupFrequency">Backup Frequency:</label>
+                                <select id="backupFrequency">
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly" selected>Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                            <button id="toggleBackupBtn" class="btn btn-secondary">Enable Auto Backup</button>
+                        </div>
+
+                        <!-- Data Self-Destruct -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>Data Self-Destruct</h3>
+                                <span id="selfDestructStatus" class="settings-badge warning">Disabled</span>
+                            </div>
+                            <p>Set your data to self-destruct after multiple failed login attempts.</p>
+                            <div class="settings-option">
+                                <label for="failedAttempts">Failed Attempts Before Self-Destruct:</label>
+                                <select id="failedAttempts">
+                                    <option value="5">5 Attempts</option>
+                                    <option value="10" selected>10 Attempts</option>
+                                    <option value="15">15 Attempts</option>
+                                </select>
+                            </div>
+                            <button id="toggleSelfDestructBtn" class="btn btn-secondary">Enable Self-Destruct</button>
+                        </div>
+                    </div>
+
+                    <!-- Privacy & Sessions Section -->
+                    <div id="privacy-sessions" class="settings-section">
+                        <h2><i data-lucide="eye-off"></i> Privacy & Sessions</h2>
+                        
+                        <!-- Session Timeout -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>Session Timeout</h3>
+                                <span class="settings-badge secure">Active</span>
+                            </div>
+                            <p>Automatically log out after a period of inactivity.</p>
+                            <div class="settings-option">
+                                <label for="sessionTimeout">Timeout Period:</label>
+                                <select id="sessionTimeout">
+                                    <option value="5">5 minutes</option>
+                                    <option value="15">15 minutes</option>
+                                    <option value="30" selected>30 minutes</option>
+                                    <option value="60">1 hour</option>
+                                </select>
+                            </div>
+                            <button id="saveTimeoutBtn" class="btn btn-secondary">Save Changes</button>
+                        </div>
+
+                        <!-- Active Sessions -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>Active Sessions</h3>
+                                <span id="activeSessions" class="settings-badge info">1 Active</span>
+                            </div>
+                            <p>View and manage your active login sessions.</p>
+                            <div id="sessionsList" class="sessions-list">
+                                <div class="session-item current">
+                                    <div class="session-info">
+                                        <strong>Current Session</strong>
+                                        <span>Windows • Chrome • Started 10 minutes ago</span>
+                                    </div>
+                                    <span class="session-badge">Current</span>
+                                </div>
+                            </div>
+                            <button id="logoutAllBtn" class="btn btn-danger">Logout All Other Devices</button>
+                        </div>
+
+                        <!-- Activity Log -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>Activity Log</h3>
+                            </div>
+                            <p>View recent account activity and security events.</p>
+                            <div id="activityLog" class="activity-log">
+                                <div class="activity-item">
+                                    <div class="activity-info">
+                                        <strong>Login Successful</strong>
+                                        <span>Today, 10:15 AM • Windows • Chrome</span>
+                                    </div>
+                                    <span class="activity-type login">Login</span>
+                                </div>
+                            </div>
+                            <button id="viewAllActivityBtn" class="btn btn-secondary">View All Activity</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Change Master Password Modal -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <h2>Change Master Password</h2>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label for="currentPassword">Current Password</label>
+                    <div class="password-input">
+                        <input type="password" id="currentPassword" autocomplete="current-password" required>
+                        <button type="button" class="toggle-password" data-for="currentPassword">
+                            <i data-lucide="eye" class="show-password"></i>
+                            <i data-lucide="eye-off" class="hide-password"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <div class="password-input">
+                        <input type="password" id="newPassword" autocomplete="new-password" required>
+                        <button type="button" class="toggle-password" data-for="newPassword">
+                            <i data-lucide="eye" class="show-password"></i>
+                            <i data-lucide="eye-off" class="hide-password"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmNewPassword">Confirm New Password</label>
+                    <div class="password-input">
+                        <input type="password" id="confirmNewPassword" autocomplete="new-password" required>
+                        <button type="button" class="toggle-password" data-for="confirmNewPassword">
+                            <i data-lucide="eye" class="show-password"></i>
+                            <i data-lucide="eye-off" class="hide-password"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="password-strength" id="passwordStrength">
+                    <div class="strength-bar"></div>
+                    <span class="strength-text">Password Strength: Weak</span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Update Password</button>
+                    <button type="button" id="cancelPasswordBtn" class="btn btn-ghost">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2FA Setup Modal -->
+    <div id="twoFAModal" class="modal">
+        <div class="modal-content">
+            <h2>Setup Two-Factor Authentication</h2>
+            <div class="twofa-setup-steps">
+                <div class="twofa-step active" id="step1">
+                    <h3>Step 1: Install Authenticator App</h3>
+                    <p>Download and install an authenticator app on your mobile device:</p>
+                    <div class="authenticator-apps">
+                        <div class="auth-app">
+                            <i data-lucide="smartphone"></i>
+                            <span>Google Authenticator</span>
+                        </div>
+                        <div class="auth-app">
+                            <i data-lucide="smartphone"></i>
+                            <span>Microsoft Authenticator</span>
+                        </div>
+                        <div class="auth-app">
+                            <i data-lucide="smartphone"></i>
+                            <span>Authy</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary next-step" data-next="step2">Continue</button>
+                </div>
+                <div class="twofa-step" id="step2">
+                    <h3>Step 2: Scan QR Code</h3>
+                    <p>Scan this QR code with your authenticator app:</p>
+                    <div class="qr-container">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/SecureVault:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=SecureVault" alt="2FA QR Code" class="qr-code">
+                    </div>
+                    <p>Or enter this code manually: <strong>JBSWY3DPEHPK3PXP</strong></p>
+                    <div class="step-buttons">
+                        <button class="btn btn-ghost prev-step" data-prev="step1">Back</button>
+                        <button class="btn btn-primary next-step" data-next="step3">Continue</button>
+                    </div>
+                </div>
+                <div class="twofa-step" id="step3">
+                    <h3>Step 3: Verify Code</h3>
+                    <p>Enter the 6-digit code from your authenticator app:</p>
+                    <div class="form-group">
+                        <input type="text" id="authCode" placeholder="000000" maxlength="6" class="auth-code-input">
+                    </div>
+                    <div class="step-buttons">
+                        <button class="btn btn-ghost prev-step" data-prev="step2">Back</button>
+                        <button class="btn btn-primary" id="verify2FABtn">Verify & Enable 2FA</button>
+                    </div>
+                </div>
+                <div class="twofa-step" id="step4">
+                    <h3>Success!</h3>
+                    <div class="success-icon">
+                        <i data-lucide="check-circle"></i>
+                    </div>
+                    <p>Two-factor authentication has been successfully enabled for your account.</p>
+                    <p>Make sure to save your recovery codes in a safe place:</p>
+                    <div class="recovery-codes">
+                        <code>ABCD-EFGH-IJKL</code>
+                        <code>MNOP-QRST-UVWX</code>
+                        <code>YZAB-CDEF-GHIJ</code>
+                    </div>
+                    <button class="btn btn-primary" id="complete2FABtn">Complete Setup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recovery Setup Modal -->
+    <div id="recoveryModal" class="modal">
+        <div class="modal-content">
+            <h2>Setup Account Recovery</h2>
+            <form id="recoveryForm">
+                <div class="form-group">
+                    <label for="recoveryEmail">Recovery Email</label>
+                    <input type="email" id="recoveryEmail" placeholder="alternate@example.com" required>
+                    <p class="form-help">We'll send a recovery link to this email if you forget your password</p>
+                </div>
+                <div class="form-group">
+                    <label for="securityQuestion1">Security Question 1</label>
+                    <select id="securityQuestion1" required>
+                        <option value="" disabled selected>Select a question</option>
+                        <option value="q1">What was the name of your first pet?</option>
+                        <option value="q2">What was the name of the street you grew up on?</option>
+                        <option value="q3">What was your childhood nickname?</option>
+                        <option value="q4">What was the make of your first car?</option>
+                    </select>
+                    <input type="text" id="securityAnswer1" placeholder="Your answer" required>
+                </div>
+                <div class="form-group">
+                    <label for="securityQuestion2">Security Question 2</label>
+                    <select id="securityQuestion2" required>
+                        <option value="" disabled selected>Select a question</option>
+                        <option value="q5">What is your mother's maiden name?</option>
+                        <option value="q6">What was the name of your elementary school?</option>
+                        <option value="q7">In what city were you born?</option>
+                        <option value="q8">What was the name of your childhood best friend?</option>
+                    </select>
+                    <input type="text" id="securityAnswer2" placeholder="Your answer" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Recovery Options</button>
+                    <button type="button" id="cancelRecoveryBtn" class="btn btn-ghost">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="auto-backup.js"></script>
+    <script src="settings.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
