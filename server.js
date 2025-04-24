@@ -21,6 +21,8 @@ app.use(express.static(path.join(__dirname, "public")));
 // Firebase initialization
 try {
   const serviceAccount = JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_B64, "base64").toString("utf-8"));
+  //  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL: "https://s3curevau1t-default-rtdb.firebaseio.com",
