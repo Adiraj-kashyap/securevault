@@ -5,22 +5,53 @@
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+@theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Golden Ratio 60-30-10 Palette (5 Shades: Ultra Dark, Dark, Normal, Bright, Ultra Light) */
+  /* This ensures extreme depth and glassmorphism support */
+  
+  /* Primary (60%) - Ultra Dark Backgrounds */
+  --color-primary-900: #0a0a0c; /* Ultra Dark (Deep Space) */
+  --color-primary-800: #121216; /* Dark */
+  --color-primary-500: #1a1a20; /* Normal */
+  --color-primary-300: #2a2a35; /* Bright */
+  --color-primary-100: #e0e0e5; /* Ultra Light (Text on Primary) */
+
+  /* Secondary (30%) - Sophisticated Accents / Cards */
+  --color-secondary-900: #11151c; /* Ultra Dark */
+  --color-secondary-800: #1b212c; /* Dark */
+  --color-secondary-500: #2c3648; /* Normal */
+  --color-secondary-300: #4a5a78; /* Bright */
+  --color-secondary-100: #e8ecf2; /* Ultra Light */
+
+  /* Accent (10%) - Vibrant Golden/Amber for Actions & Highlights */
+  --color-accent-900: #4d3300; /* Ultra Dark */
+  --color-accent-800: #805500; /* Dark */
+  --color-accent-500: #d4af37; /* Normal (Gold) */
+  --color-accent-300: #e6c86a; /* Bright */
+  --color-accent-100: #fbf5df; /* Ultra Light */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Base Styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-primary-900);
+  color: var(--color-primary-100);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glassmorphism Utilities */
+@layer utilities {
+  .glass {
+    @apply bg-secondary-900/40 backdrop-blur-xl border border-secondary-500/20 shadow-2xl;
+  }
+  .glass-card {
+    @apply bg-primary-800/60 backdrop-blur-md border border-white/5 rounded-2xl shadow-xl transition-all duration-300 hover:shadow-accent-500/10 hover:border-accent-500/30;
+  }
+  .glow-text {
+    text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+  }
 }
