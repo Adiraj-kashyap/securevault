@@ -32,13 +32,39 @@ export const api = {
         }
     },
 
-    // Future Storage Endpoints
+    // Storage Endpoints
     storage: {
-        uploadMetadata: async (fileData: any) => {
-            // Will handle Level 1, 2, 3 storage metadata
+        // Analytics
+        getStats: async (token: string) => {
+            const res = await fetch(`${API_BASE_URL}/storage/stats`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
         },
-        getFiles: async (userId: string) => {
-            // Will fetch the encrypted folder structure
+        // View Folders and Files
+        getDirectory: async (token: string, folderId: string | null = null) => {
+            const url = folderId
+                ? `${API_BASE_URL}/storage/directory/${folderId}`
+                : `${API_BASE_URL}/storage/directory`;
+            const res = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+        },
+        // Create a new logical folder
+        createFolder: async (token: string, payload: { name: string; parentFolderId?: string; colorTheme?: string }) => {
+            const res = await fetch(`${API_BASE_URL}/storage/folder`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
         }
     }
 };

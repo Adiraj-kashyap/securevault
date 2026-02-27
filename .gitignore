@@ -36,6 +36,7 @@ yarn-error.log*
 .env
 frontend/.env
 backend/.env
+backend/*.json
 
 # legacy codebase backup (don't commit to new repo)
 /legacy

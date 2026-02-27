@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { cryptoUtils } from '@/lib/crypto';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSession } from '../SessionContext';
+import { useRouter } from 'next/navigation';
 
 export default function AuthPage() {
     const [isLogin, setIsLogin] = useState(true);
@@ -13,6 +15,9 @@ export default function AuthPage() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    const { setSession } = useSession();
+    const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -36,7 +41,16 @@ export default function AuthPage() {
                 if (!privateKey) throw new Error("Invalid Master Password. Decryption failed.");
 
                 // Store session in memory (SessionContext)
-                alert("Vault Decrypted Successfully!");
+                setSession({
+                    userId: res.userId,
+                    email,
+                    token: res.token,
+                    derivedAesKey: derivedKey,
+                    decryptedPrivateKey: privateKey,
+                    publicKey: res.publicKey
+                });
+
+                router.push('/dashboard');
 
             } else {
                 // --- REGISTRATION FLOW ---

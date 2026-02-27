@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const crypto = require('crypto');
+const { generateToken } = require('../config/authMiddleware');
 
 // Utility to hash the master password for authentication ONLY
 // The actual master password is used client-side to derive the AES key protecting the Private Key
@@ -29,7 +30,15 @@ exports.register = async (req, res) => {
         });
 
         await newUser.save();
-        res.status(201).json({ message: 'User registered successfully', userId: newUser._id });
+
+        // Generate JWT Auth Token
+        const token = generateToken({ userId: newUser._id, email: newUser.email });
+
+        res.status(201).json({
+            message: 'User registered successfully',
+            userId: newUser._id,
+            token
+        });
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({ error: 'Server error during registration' });
@@ -50,10 +59,13 @@ exports.login = async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // In a real app, generate a JWT here. For simplicity in phase 1, we just return success.
+        // Generate JWT Auth Token
+        const token = generateToken({ userId: user._id, email: user.email });
+
         res.json({
             message: 'Login successful',
             userId: user._id,
+            token,
             publicKey: user.publicKey,
             encryptedPrivateKey: user.encryptedPrivateKey,
             salt: user.salt

@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
+// Initialize Firebase Admin SDK
+require('./config/firebase');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -12,15 +15,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Database Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/securevault', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/securevault')
     .then(() => console.log('✅ Connected to MongoDB'))
     .catch((err) => console.error('❌ MongoDB connection error:', err));
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/storage', require('./routes/storageRoutes'));
 
 app.get('/', (req, res) => {
     res.send('SecureVault API is running...');
