@@ -1,82 +1,42 @@
 const User = require('../models/User');
-const crypto = require('crypto');
-const { generateToken } = require('../config/authMiddleware');
 
-// Utility to hash the master password for authentication ONLY
-// The actual master password is used client-side to derive the AES key protecting the Private Key
-const hashPassword = (password, salt) => {
-    return crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
-};
-
-exports.register = async (req, res) => {
+exports.syncFirebaseUserToMongo = async (req, res) => {
     try {
-        const { email, password, publicKey, encryptedPrivateKey, salt } = req.body;
+        // The user is already authenticated via Firebase ID Token (`req.user` mapped in authMiddleware)
+        const { email, userId: firebaseUid } = req.user;
+        const { passwordHash, publicKey, encryptedPrivateKey, salt } = req.body;
 
-        // Check if user exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ error: 'User already exists' });
+        // Check if user backup already exists
+        let user = await User.findOne({ uid: firebaseUid });
+
+        if (user) {
+            // Update existing user's keys in case they were rotated or it's a login sync
+            if (passwordHash) user.masterPasswordHash = passwordHash;
+            if (publicKey) user.publicKey = publicKey;
+            if (encryptedPrivateKey) user.encryptedPrivateKey = encryptedPrivateKey;
+            if (salt) user.salt = salt;
+            await user.save();
+            return res.status(200).json({ message: 'User backup synced to MongoDB' });
         }
 
-        // Hash the password for basic auth matching
-        const masterPasswordHash = hashPassword(password, salt);
-
-        const newUser = new User({
+        // Create new user backup
+        user = new User({
+            uid: firebaseUid,
             email,
-            masterPasswordHash,
+            masterPasswordHash: passwordHash, // Not a true hash, just a PBKDF2 derivative from the frontend
             publicKey,
             encryptedPrivateKey,
             salt
         });
 
-        await newUser.save();
-
-        // Generate JWT Auth Token
-        const token = generateToken({ userId: newUser._id, email: newUser.email });
-
-        res.status(201).json({
-            message: 'User registered successfully',
-            userId: newUser._id,
-            token
-        });
+        await user.save();
+        res.status(201).json({ message: 'User backup created in MongoDB' });
     } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ error: 'Server error during registration' });
+        console.error('Mongo sync error:', error);
+        res.status(500).json({ error: 'Server error during Mongo backup initialization' });
     }
 };
 
-exports.login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        const hash = hashPassword(password, user.salt);
-        if (hash !== user.masterPasswordHash) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        // Generate JWT Auth Token
-        const token = generateToken({ userId: user._id, email: user.email });
-
-        res.json({
-            message: 'Login successful',
-            userId: user._id,
-            token,
-            publicKey: user.publicKey,
-            encryptedPrivateKey: user.encryptedPrivateKey,
-            salt: user.salt
-        });
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ error: 'Server error during login' });
-    }
-};
-
-// Endpoint to fetch another user's public key (needed to send them messages/files)
 exports.getPublicKey = async (req, res) => {
     try {
         const { email } = req.params;

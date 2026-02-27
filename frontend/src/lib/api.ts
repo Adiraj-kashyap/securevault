@@ -5,28 +5,15 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:50
 export const api = {
     // Authentication Endpoints
     auth: {
-        register: async (payload: { email: string; passwordHash: string; publicKey: string; encryptedPrivateKey: string; salt: string }) => {
-            const res = await fetch(`${API_BASE_URL}/auth/register`, {
+        syncMongoBackup: async (token: string, payload: { passwordHash: string; publicKey: string; encryptedPrivateKey: string; salt: string }) => {
+            const res = await fetch(`${API_BASE_URL}/auth/sync`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(payload)
             });
-            if (!res.ok) throw new Error(await res.text());
-            return res.json();
-        },
-        login: async (payload: { email: string; passwordHash: string }) => {
-            // In a real scenario, the passwordHash is sent to the server for verification, 
-            // but it is NEVER the raw password.
-            const res = await fetch(`${API_BASE_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (!res.ok) throw new Error(await res.text());
-            return res.json();
-        },
-        getPublicKey: async (email: string) => {
-            const res = await fetch(`${API_BASE_URL}/auth/public-key/${encodeURIComponent(email)}`);
             if (!res.ok) throw new Error(await res.text());
             return res.json();
         }

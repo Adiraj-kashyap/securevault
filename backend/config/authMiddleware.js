@@ -1,9 +1,6 @@
-const jwt = require('jsonwebtoken');
+const { admin } = require('./firebase');
 
-// A secure key should be stored in .env in production
-const JWT_SECRET = process.env.JWT_SECRET || 'securevault-super-secret-key-2026';
-
-const requireAuth = (req, res, next) => {
+const requireAuth = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -13,16 +10,18 @@ const requireAuth = (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded; // Attach user payload ({ userId, email }) to request
+        if (!admin) throw new Error("Firebase Admin not initialized on server.");
+
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        // Map uid back to userId so storageController.js keeps working seamlessly
+        req.user = {
+            userId: decodedToken.uid,
+            email: decodedToken.email
+        };
         next();
     } catch (err) {
-        return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
+        return res.status(401).json({ error: 'Unauthorized: Invalid or expired Firebase ID token' });
     }
 };
 
-const generateToken = (payload) => {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
-};
-
-module.exports = { requireAuth, generateToken, JWT_SECRET };
+module.exports = { requireAuth };

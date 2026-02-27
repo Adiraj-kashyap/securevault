@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
+    // Store the Firebase UID here to link the MongoDB backup to the active Firebase session
+    uid: {
+        type: String,
+        required: true,
+        unique: true
+    },
     email: {
         type: String,
         required: true,

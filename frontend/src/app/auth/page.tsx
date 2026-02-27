@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { Lock, Mail, KeyRound, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { auth, database } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { ref, set, get, child } from 'firebase/database';
 import { cryptoUtils } from '@/lib/crypto';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from '../SessionContext';
@@ -26,34 +29,50 @@ export default function AuthPage() {
 
         try {
             if (isLogin) {
-                // --- LOGIN FLOW ---
-                // 1. We just send the hash of the password to assert identity with the server.
-                // We need the user's salt to hash it, so in reality, we'd fetch the salt first.
-                // For this demo structure, we will hit the login endpoint which expects the raw password
-                // and handles the salt lookup server-side for authentication.
-                const res = await api.auth.login({ email, passwordHash: password /* see note above */ });
+                // --- FIREBASE NATIVE LOGIN FLOW ---
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
 
-                // 2. The server authenticates and returns the Encrypted Private Key
-                // 3. We derive the AES key from the master password LOCALLY to decrypt it.
-                const derivedKey = await cryptoUtils.deriveKeyFromPassword(password, res.salt);
-                const privateKey = await cryptoUtils.decryptPrivateKey(res.encryptedPrivateKey, derivedKey);
+                // Fetch the user's public/private PGP keys from Firebase Realtime Database
+                const dbRef = ref(database);
+                const snapshot = await get(child(dbRef, `users/${user.uid}/keys`));
+
+                if (!snapshot.exists()) {
+                    throw new Error("Vault keys not found. Has this account been initialized?");
+                }
+
+                const keys = snapshot.val();
+
+                // Decrypt the Private RSA Key using the Master Password
+                const derivedKey = await cryptoUtils.deriveKeyFromPassword(password, keys.salt);
+                const privateKey = await cryptoUtils.decryptPrivateKey(keys.encryptedPrivateKey, derivedKey);
 
                 if (!privateKey) throw new Error("Invalid Master Password. Decryption failed.");
 
-                // Store session in memory (SessionContext)
+                const token = await user.getIdToken(); // Get Firebase ID Token for MongoDB API calls
+
+                // Backup sync: Also update MongoDB secretly so it has the keys
+                await api.auth.syncMongoBackup(token, {
+                    passwordHash: password,
+                    publicKey: keys.publicKey,
+                    encryptedPrivateKey: keys.encryptedPrivateKey,
+                    salt: keys.salt
+                });
+
+                // Store session in memory
                 setSession({
-                    userId: res.userId,
+                    userId: user.uid,
                     email,
-                    token: res.token,
+                    token,
                     derivedAesKey: derivedKey,
                     decryptedPrivateKey: privateKey,
-                    publicKey: res.publicKey
+                    publicKey: keys.publicKey
                 });
 
                 router.push('/dashboard');
 
             } else {
-                // --- REGISTRATION FLOW ---
+                // --- FIREBASE NATIVE REGISTRATION FLOW ---
                 // 1. Generate new RSA Keypair locally
                 const { publicKey, privateKey } = await cryptoUtils.generateRSAKeyPair();
 
@@ -66,10 +85,21 @@ export default function AuthPage() {
                 // 4. Encrypt Private RSA Key locally
                 const encryptedPrivateKey = await cryptoUtils.encryptPrivateKey(privateKey, derivedKey);
 
-                // 5. Send Public Key + Encrypted Private Key + Salt to Server
-                await api.auth.register({
-                    email,
-                    passwordHash: password, // The server hashes this with PBKDF2 for auth checks
+                // 5. Create User in Firebase Auth natively
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // 6. Push Public Key + Encrypted Private Key into Firebase Realtime Database
+                await set(ref(database, `users/${user.uid}/keys`), {
+                    publicKey,
+                    encryptedPrivateKey,
+                    salt
+                });
+
+                // 7. Backup Sync: Feed the credentials to the MongoDB Express API
+                const token = await user.getIdToken();
+                await api.auth.syncMongoBackup(token, {
+                    passwordHash: password,
                     publicKey,
                     encryptedPrivateKey,
                     salt
