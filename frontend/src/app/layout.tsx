@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Link from "next/link";
-import { Shield } from "lucide-react";
 import { ThemeProvider } from "./ThemeContext";
-import { ThemeSelector } from "./ThemeSelector";
 import { SessionProvider } from "./SessionContext";
+import { NavbarClient } from "./NavbarClient";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,58 +16,93 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SecureVault | Ultimate Zero-Knowledge Storage",
-  description: "Securely store files, folders, and messages with AES-256 and RSA cryptography.",
+  title: "SecureVault | Zero-Knowledge Encryption Platform",
+  description:
+    "The ultimate zero-knowledge platform. Encrypt, store, and share your most sensitive files, folders, and messages using AES-256 + RSA-2048.",
+  keywords: "encryption, zero-knowledge, secure storage, AES-256, RSA, privacy",
+  openGraph: {
+    title: "SecureVault | Zero-Knowledge Encryption Platform",
+    description: "Encrypt everything. Trust no one. Store fearlessly.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-      <body className="min-h-screen relative selection:bg-accent-500/30 selection:text-accent-300">
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      suppressHydrationWarning
+    >
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="min-h-screen bg-primary-900 text-primary-100 overflow-x-hidden">
         <SessionProvider>
           <ThemeProvider>
-            {/* Global Glassmorphism Navigation Navbar */}
-            <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
-              <div className="max-w-7xl mx-auto glass rounded-2xl px-6 py-3 flex items-center justify-between pointer-events-auto">
-                <Link href="/" className="flex items-center gap-2 group transition-opacity hover:opacity-80">
-                  <Shield className="w-6 h-6 text-accent-500 group-hover:scale-110 transition-transform" />
-                  <span className="font-bold text-xl tracking-wide glow-text">SecureVault</span>
-                </Link>
+            {/* Ambient background mesh — always present */}
+            <div className="fixed inset-0 pointer-events-none z-0" aria-hidden>
+              <div className="orb-top-left" />
+              <div className="orb-bottom-right" />
+            </div>
 
-                <div className="hidden md:flex items-center gap-8 text-sm font-medium text-primary-100/70">
-                  <Link href="/features" className="hover:text-accent-300 transition-colors">Features</Link>
-                  <Link href="/architecture" className="hover:text-accent-300 transition-colors">Architecture</Link>
-                  <Link href="/pricing" className="hover:text-accent-300 transition-colors">Enterprise</Link>
-                </div>
+            {/* Navigation */}
+            <NavbarClient />
 
-                <div className="flex items-center gap-4">
-                  <ThemeSelector />
-                  <Link href="/auth">
-                    <button className="text-sm font-semibold text-primary-100 hover:text-accent-300 transition-colors px-4 py-2">
-                      Sign In
-                    </button>
-                  </Link>
-                  <Link href="/auth?mode=register">
-                    <button className="text-sm font-semibold bg-accent-500 hover:bg-accent-300 text-primary-900 px-5 py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(212,175,55,0.2)] hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]">
-                      Get Started
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            </nav>
-
-            {/* Main Content Area */}
-            <main className="pt-24 min-h-screen">
+            {/* Page Content */}
+            <main className="relative z-10 pt-[76px] min-h-screen">
               {children}
             </main>
 
-            {/* Global Footer */}
-            <footer className="border-t border-secondary-500/20 py-8 text-center text-primary-100/40 text-sm mt-12 bg-primary-900/50 backdrop-blur-sm relative z-10">
-              <p>© {new Date().getFullYear()} SecureVault. Advanced Encryption Systems.</p>
+            {/* Footer */}
+            <footer className="relative z-10 border-t border-white/5 py-10 mt-16">
+              <div className="max-w-7xl mx-auto px-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+                  <div className="md:col-span-2">
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg viewBox="0 0 24 24" className="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                      </svg>
+                      <span className="font-display font-bold text-lg glow-text">SecureVault</span>
+                    </div>
+                    <p className="text-primary-100/40 text-sm leading-relaxed max-w-xs">
+                      Zero-knowledge encryption for the paranoid professional. Your keys, your data, your control — always.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-primary-100/30 mb-4">Platform</p>
+                    <ul className="space-y-2 text-sm text-primary-100/50">
+                      <li><a href="/features" className="hover:text-accent-300 transition-colors">Features</a></li>
+                      <li><a href="/architecture" className="hover:text-accent-300 transition-colors">Architecture</a></li>
+                      <li><a href="/pricing" className="hover:text-accent-300 transition-colors">Enterprise</a></li>
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-primary-100/30 mb-4">Security</p>
+                    <ul className="space-y-2 text-sm text-primary-100/50">
+                      <li><a href="/audit-log" className="hover:text-accent-300 transition-colors">Audit Log</a></li>
+                      <li><a href="/steganography" className="hover:text-accent-300 transition-colors">Hidden Volumes</a></li>
+                      <li><a href="/dead-mans-switch" className="hover:text-accent-300 transition-colors">Dead Man&apos;s Switch</a></li>
+                    </ul>
+                  </div>
+                </div>
+                <div className="divider-glow mb-6" />
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <p className="text-primary-100/25 text-xs font-code">
+                    © {new Date().getFullYear()} SecureVault · AES-256 + RSA-2048 · Zero-Knowledge Architecture
+                  </p>
+                  <p className="text-primary-100/20 text-xs font-code">
+                    All encryption occurs client-side. We never see your data.
+                  </p>
+                </div>
+              </div>
             </footer>
           </ThemeProvider>
         </SessionProvider>
