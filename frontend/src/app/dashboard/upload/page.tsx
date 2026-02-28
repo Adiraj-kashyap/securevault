@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UploadCloud, Zap, HardDrive, Snowflake, X, Lock,
@@ -23,9 +23,9 @@ interface QueuedFile {
 }
 
 const TIERS: { id: StorageTier; label: string; sub: string; icon: any; color: string; badgeClass: string }[] = [
-  { id: "hot",  label: "Hot",  sub: "Instant access · No compression",     icon: Zap,       color: "text-orange-400 border-orange-500/40 bg-orange-900/20",  badgeClass: "badge-hot"  },
-  { id: "warm", label: "Warm", sub: "Compressed · Standard retrieval",      icon: HardDrive, color: "text-accent-400 border-accent-500/40 bg-accent-900/20",  badgeClass: "badge-warm" },
-  { id: "cold", label: "Cold", sub: "LZMA archive · Deep storage",          icon: Snowflake, color: "text-cyan-400 border-cyan-500/40 bg-cyan-900/20",        badgeClass: "badge-cold" },
+  { id: "hot", label: "Hot", sub: "Instant access · No compression", icon: Zap, color: "text-orange-400 border-orange-500/40 bg-orange-900/20", badgeClass: "badge-hot" },
+  { id: "warm", label: "Warm", sub: "Compressed · Standard retrieval", icon: HardDrive, color: "text-accent-400 border-accent-500/40 bg-accent-900/20", badgeClass: "badge-warm" },
+  { id: "cold", label: "Cold", sub: "LZMA archive · Deep storage", icon: Snowflake, color: "text-cyan-400 border-cyan-500/40 bg-cyan-900/20", badgeClass: "badge-cold" },
 ];
 
 function ProgressBar({ value, color }: { value: number; color: string }) {
@@ -42,22 +42,24 @@ function ProgressBar({ value, color }: { value: number; color: string }) {
 }
 
 export default function UploadPage() {
-  const { session } = useSession();
-  const router      = useRouter();
-  const [tier, setTier]           = useState<StorageTier>("hot");
+  const { session, isHydrating } = useSession();
+  const router = useRouter();
+  const [tier, setTier] = useState<StorageTier>("hot");
   const [dragActive, setDragActive] = useState(false);
-  const [queue, setQueue]           = useState<QueuedFile[]>([]);
+  const [queue, setQueue] = useState<QueuedFile[]>([]);
   const [folderName, setFolderName] = useState("");
-  const inputRef  = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const folderRef = useRef<HTMLInputElement>(null);
 
-  if (!session) { router.push("/auth"); return null; }
+  useEffect(() => {
+    if (!isHydrating && !session) router.push("/auth");
+  }, [session, isHydrating, router]);
 
   const addFiles = (files: File[]) => {
     const items: QueuedFile[] = files.map(f => ({
-      id:       crypto.randomUUID(),
-      file:     f,
-      status:   "queued",
+      id: crypto.randomUUID(),
+      file: f,
+      status: "queued",
       progress: 0,
     }));
     setQueue(prev => [...prev, ...items]);
@@ -75,6 +77,8 @@ export default function UploadPage() {
   const updateItem = (id: string, patch: Partial<QueuedFile>) =>
     setQueue(prev => prev.map(q => q.id === id ? { ...q, ...patch } : q));
 
+  if (isHydrating || !session) return null;
+
   const startUpload = async () => {
     const queued = queue.filter(q => q.status === "queued");
     for (const item of queued) {
@@ -83,15 +87,15 @@ export default function UploadPage() {
         // Encrypt file client-side using the session AES key
         const aesKey = cryptoUtils.generateAESKey();
         const encBlob = await cryptoUtils.encryptFile(item.file, aesKey);
-        const encKey  = await cryptoUtils.encryptAESKeyWithPublic(aesKey, session.publicKey);
+        const encKey = await cryptoUtils.encryptAESKeyWithPublic(aesKey, session.publicKey);
         updateItem(item.id, { status: "uploading", progress: 50 });
 
         const formData = new FormData();
-        formData.append("file",           encBlob);
-        formData.append("encryptedKey",   encKey);
-        formData.append("storageLevel",   tier);
-        formData.append("folderId",       folderName);
-        formData.append("originalName",   item.file.name);
+        formData.append("file", encBlob);
+        formData.append("encryptedKey", encKey);
+        formData.append("storageLevel", tier);
+        formData.append("folderId", folderName);
+        formData.append("originalName", item.file.name);
 
         await api.storage.uploadFile(session.token, formData);
         updateItem(item.id, { status: "done", progress: 100 });
@@ -110,13 +114,13 @@ export default function UploadPage() {
   return (
     <div className="min-h-screen px-4 py-10 max-w-3xl mx-auto">
       {/* Back */}
-      <motion.div initial={{ opacity:0, x:-10 }} animate={{ opacity:1, x:0 }} className="mb-8">
+      <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
         <Link href="/dashboard" className="flex items-center gap-2 text-primary-100/40 hover:text-primary-100/80 text-sm transition-colors">
           <ChevronLeft className="w-4 h-4" /> Back to Vault
         </Link>
       </motion.div>
 
-      <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="font-display font-extrabold text-3xl text-primary-100 mb-1">
           Encrypt &amp; Upload
         </h1>
@@ -133,9 +137,8 @@ export default function UploadPage() {
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => setTier(id)}
-              className={`glass-card p-4 rounded-2xl border-2 transition-all text-left ${
-                tier === id ? `border-current ${color}` : "border-transparent"
-              }`}
+              className={`glass-card p-4 rounded-2xl border-2 transition-all text-left ${tier === id ? `border-current ${color}` : "border-transparent"
+                }`}
             >
               <Icon className={`w-5 h-5 mb-2 ${tier === id ? "" : "text-primary-100/30"}`} />
               <p className={`text-sm font-bold ${tier === id ? "" : "text-primary-100/50"}`}>{label}</p>
@@ -227,30 +230,30 @@ export default function UploadPage() {
                     className="flex items-center gap-3"
                   >
                     <div className="w-8 h-8 rounded-lg bg-secondary-800/50 border border-secondary-500/20 flex items-center justify-center flex-shrink-0">
-                      {item.status === "done"      ? <CheckCircle className="w-4 h-4 text-safe" />      :
-                       item.status === "error"     ? <AlertTriangle className="w-4 h-4 text-danger" />  :
-                       item.status === "encrypting"? <Lock className="w-4 h-4 text-accent-400 animate-pulse" />  :
-                       item.status === "uploading" ? <Loader2 className="w-4 h-4 text-accent-500 animate-spin" />:
-                                                     <FileKey className="w-4 h-4 text-primary-100/40" />}
+                      {item.status === "done" ? <CheckCircle className="w-4 h-4 text-safe" /> :
+                        item.status === "error" ? <AlertTriangle className="w-4 h-4 text-danger" /> :
+                          item.status === "encrypting" ? <Lock className="w-4 h-4 text-accent-400 animate-pulse" /> :
+                            item.status === "uploading" ? <Loader2 className="w-4 h-4 text-accent-500 animate-spin" /> :
+                              <FileKey className="w-4 h-4 text-primary-100/40" />}
                     </div>
                     <div className="flex-1 overflow-hidden">
                       <p className="text-sm font-medium text-primary-100 truncate">{item.file.name}</p>
                       <div className="mt-1">
-                        {item.status === "queued"     && <p className="text-[10px] text-primary-100/30">Queued</p>}
+                        {item.status === "queued" && <p className="text-[10px] text-primary-100/30">Queued</p>}
                         {item.status === "encrypting" && (
                           <div className="space-y-1">
                             <p className="text-[10px] text-accent-400 font-code">Encrypting AES-256...</p>
                             <ProgressBar value={item.progress} color="bg-accent-500" />
                           </div>
                         )}
-                        {item.status === "uploading"  && (
+                        {item.status === "uploading" && (
                           <div className="space-y-1">
                             <p className="text-[10px] text-accent-300 font-code">Transmitting encrypted blob...</p>
                             <ProgressBar value={item.progress} color="bg-accent-300" />
                           </div>
                         )}
-                        {item.status === "done"       && <p className="text-[10px] text-safe font-code">Encrypted &amp; stored ✓</p>}
-                        {item.status === "error"      && <p className="text-[10px] text-danger font-code truncate">{item.error}</p>}
+                        {item.status === "done" && <p className="text-[10px] text-safe font-code">Encrypted &amp; stored ✓</p>}
+                        {item.status === "error" && <p className="text-[10px] text-danger font-code truncate">{item.error}</p>}
                       </div>
                     </div>
                     {item.status === "queued" && (
