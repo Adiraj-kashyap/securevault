@@ -135,6 +135,26 @@ export const api = {
             });
             if (!res.ok) throw new Error(await res.text());
             return res.json();
+        },
+
+        getPreferences: async (token: string): Promise<{ appearance: Record<string, any>; premiumUsedTodayMs: number; premiumDayDate: string } | null> => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/auth/preferences`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) return null;
+                return res.json();
+            } catch { return null; }
+        },
+
+        savePreferences: async (token: string, payload: { appearance?: Record<string, any>; premiumUsedTodayMs?: number }): Promise<void> => {
+            try {
+                await fetch(`${API_BASE_URL}/auth/preferences`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+            } catch { /* fire-and-forget, silently ignore on offline */ }
         }
     },
 
@@ -237,3 +257,4 @@ export const api = {
         }
     }
 };
+

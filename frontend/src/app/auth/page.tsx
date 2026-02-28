@@ -11,6 +11,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { cryptoUtils } from "@/lib/crypto";
 import { useSession } from "../SessionContext";
+import { useAppearance } from "../AppearanceContext";
+import { usePremium } from "../PremiumContext";
 import { AuthSuccessAnimation } from "../AuthSuccessAnimation";
 import { AnimatePresence as AP } from "framer-motion";
 
@@ -160,7 +162,14 @@ function AuthBackground() {
 function AuthForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { setSession } = useSession();
+  const { session, setSession } = useSession();
+  const appearance = useAppearance();
+  const { hydrateFromServer } = usePremium();
+
+  // Already logged in → bounce to dashboard
+  useEffect(() => {
+    if (session) router.replace("/dashboard");
+  }, [session, router]);
 
   const [isLogin, setIsLogin] = useState(searchParams.get("mode") !== "register");
   const [email, setEmail] = useState("");
@@ -186,7 +195,31 @@ function AuthForm() {
         const derivedKey = await cryptoUtils.deriveKeyFromPassword(password, res.salt);
         const privateKey = await cryptoUtils.decryptPrivateKey(res.encryptedPrivateKey, derivedKey);
         if (!privateKey) throw new Error("Invalid Master Password. Decryption failed.");
-        setSession({ userId: res.userId, email, tagline: res.tagline, token: res.token, derivedAesKey: derivedKey, decryptedPrivateKey: privateKey, publicKey: res.publicKey });
+        const newSession = { userId: res.userId, email, tagline: res.tagline, token: res.token, derivedAesKey: derivedKey, decryptedPrivateKey: privateKey, publicKey: res.publicKey };
+        setSession(newSession);
+        // 🚀 Fast preference load — fires in parallel during the animation window (~2.9s)
+        api.auth.getPreferences(res.token).then(prefs => {
+          if (!prefs) return;
+          // Apply appearance blob from MongoDB
+          if (prefs.appearance && Object.keys(prefs.appearance).length > 0) {
+            const saved = JSON.stringify(prefs.appearance);
+            localStorage.setItem("sv_appearance", saved);
+            // Patch each known key into AppearanceContext
+            const a = prefs.appearance as any;
+            if (a.bgPattern) appearance.setBgPattern(a.bgPattern);
+            if (a.glowIntensity !== undefined) appearance.setGlowIntensity(a.glowIntensity);
+            if (a.motionLevel) appearance.setMotionLevel(a.motionLevel);
+            if (a.fontStyle) appearance.setFontStyle(a.fontStyle);
+            if (a.density) appearance.setDensity(a.density);
+            if (a.borderRadius) appearance.setBorderRadius(a.borderRadius);
+            if (a.particles !== undefined) appearance.setParticles(a.particles);
+            if (a.pageTransition !== undefined) appearance.setPageTransition(a.pageTransition);
+            if (a.transitionStyle) appearance.setTransitionStyle(a.transitionStyle);
+            if (a.successStyle) appearance.setSuccessStyle(a.successStyle);
+          }
+          // Hydrate premium daily usage
+          hydrateFromServer(prefs.premiumUsedTodayMs ?? 0, prefs.premiumDayDate ?? "");
+        }).catch(() => { /* non-critical */ });
         setLoading(false);
         setShowSuccess({ email, isLogin: true });
       } else {
