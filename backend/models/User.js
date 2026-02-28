@@ -36,6 +36,22 @@ const UserSchema = new mongoose.Schema({
     // Password derivation salt
     salt: {
         type: String
+    },
+    // User preferences — appearance settings, premium daily usage
+    preferences: {
+        appearance: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {}
+        },
+        premiumUsedTodayMs: {
+            type: Number,
+            default: 0
+        },
+        premiumDayDate: {
+            // ISO date string 'YYYY-MM-DD' — when this changes, premiumUsedTodayMs resets
+            type: String,
+            default: ''
+        }
     }
 }, { timestamps: true });
 

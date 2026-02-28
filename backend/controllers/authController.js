@@ -110,3 +110,52 @@ exports.lookupByTagline = async (req, res) => {
         res.status(500).json({ error: 'Server error looking up user' });
     }
 };
+exports.getPreferences = async (req, res) => {
+    try {
+        const { userId: firebaseUid } = req.user;
+        const user = await User.findOne({ uid: firebaseUid });
+
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const todayStr = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+        const prefs = user.preferences || {};
+        const storedDay = prefs.premiumDayDate || '';
+
+        // Auto-reset premium daily counter if it's a new calendar day
+        const premiumUsedTodayMs = storedDay === todayStr ? (prefs.premiumUsedTodayMs || 0) : 0;
+
+        res.json({
+            appearance: prefs.appearance || {},
+            premiumUsedTodayMs,
+            premiumDayDate: todayStr,
+        });
+    } catch (err) {
+        console.error('getPreferences error:', err);
+        res.status(500).json({ error: 'Server error fetching preferences' });
+    }
+};
+
+exports.savePreferences = async (req, res) => {
+    try {
+        const { userId: firebaseUid } = req.user;
+        const { appearance, premiumUsedTodayMs } = req.body;
+        const todayStr = new Date().toISOString().slice(0, 10);
+
+        const user = await User.findOne({ uid: firebaseUid });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        user.preferences = {
+            appearance: appearance ?? user.preferences?.appearance ?? {},
+            premiumUsedTodayMs: typeof premiumUsedTodayMs === 'number'
+                ? premiumUsedTodayMs
+                : (user.preferences?.premiumUsedTodayMs ?? 0),
+            premiumDayDate: todayStr,
+        };
+
+        await user.save();
+        res.json({ ok: true, saved: user.preferences });
+    } catch (err) {
+        console.error('savePreferences error:', err);
+        res.status(500).json({ error: 'Server error saving preferences' });
+    }
+};
