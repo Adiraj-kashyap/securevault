@@ -37,11 +37,7 @@ interface Conversation {
   members?: Record<string, boolean>;
 }
 
-const MOCK_CONVOS: Conversation[] = [
-  { id: "1", name: "Alice K.", tagline: "alice#1204", email: "alice@example.com", lastMessage: "[Encrypted Message]", lastTime: new Date(Date.now() - 120000), unread: 2, online: true },
-  { id: "2", name: "Bob M.", tagline: "bob#9921", email: "bob@example.com", lastMessage: "[Encrypted Message]", lastTime: new Date(Date.now() - 3600000), unread: 0, online: false },
-  { id: "3", name: "Carol S.", tagline: "carol#5432", email: "carol@example.com", lastMessage: "[Encrypted Message]", lastTime: new Date(Date.now() - 86400000), unread: 0, online: true },
-];
+/* ── No mock data — all conversations load from Firebase ── */
 
 function timeAgo(date: Date): string {
   const sec = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -69,7 +65,7 @@ export default function MessagesPage() {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [convos, setConvos] = useState<Conversation[]>(MOCK_CONVOS);
+  const [convos, setConvos] = useState<Conversation[]>([]);
   const [input, setInput] = useState("");
   const [burnMode, setBurnMode] = useState(false);
   const [search, setSearch] = useState("");
@@ -97,6 +93,30 @@ export default function MessagesPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Load 1:1 conversations from Firebase userContacts node
+  useEffect(() => {
+    if (!session) return;
+    const contactsRef = ref(database, `userContacts/${session.userId}`);
+    const unsubContacts = onValue(contactsRef, (snap) => {
+      const contacts = snap.val() || {};
+      const directConvos: Conversation[] = Object.entries(contacts).map(([uid, meta]: any) => ({
+        id: uid,
+        isGroup: false,
+        name: meta.tagline || meta.name || uid,
+        tagline: meta.tagline,
+        lastMessage: meta.lastMessage || '[Encrypted Message]',
+        lastTime: meta.lastTime ? new Date(meta.lastTime) : new Date(),
+        unread: meta.unread || 0,
+        online: false,
+      }));
+      setConvos(prev => {
+        const groups = prev.filter(c => c.isGroup);
+        return [...directConvos, ...groups];
+      });
+    });
+    return () => off(contactsRef);
+  }, [session]);
+
   // Load user's groups from Firebase
   useEffect(() => {
     if (!session) return;
@@ -123,7 +143,10 @@ export default function MessagesPage() {
 
       Promise.all(groupPromises).then((results) => {
         const validGroups = results.filter(g => g !== null) as Conversation[];
-        setConvos([...MOCK_CONVOS, ...validGroups]);
+        setConvos(prev => {
+          const directs = prev.filter(c => !c.isGroup);
+          return [...directs, ...validGroups];
+        });
       });
     });
     return () => off(userGroupsRef);
@@ -255,6 +278,45 @@ export default function MessagesPage() {
       setSelected(groupId);
     } catch (e) {
       console.error(e);
+    } finally {
+      setLoadingAction(false);
+    }
+  };
+
+  const handleStartDM = async () => {
+    if (!newTagline.trim() || !session) return;
+    setLoadingAction(true);
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api";
+      const res = await fetch(`${API_BASE}/auth/user-by-tagline?tagline=${encodeURIComponent(newTagline.trim())}`, {
+        headers: { Authorization: `Bearer ${session.token}` }
+      });
+      if (!res.ok) { alert("User not found. Check the tagline and try again."); return; }
+      const data = await res.json();
+      const recipientId: string = data.userId;
+      const recipientTagline: string = data.tagline;
+
+      // Save to Firebase userContacts so conversation appears in sidebar
+      await set(ref(database, `userContacts/${session.userId}/${recipientId}`), {
+        tagline: recipientTagline,
+        lastMessage: '',
+        lastTime: Date.now(),
+        unread: 0,
+      });
+      // Save reverse mapping too
+      await set(ref(database, `userContacts/${recipientId}/${session.userId}`), {
+        tagline: session.tagline || session.email,
+        lastMessage: '',
+        lastTime: Date.now(),
+        unread: 0,
+      });
+
+      setNewContact(false);
+      setNewTagline("");
+      setSelected(recipientId);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to open secure channel. Please try again.");
     } finally {
       setLoadingAction(false);
     }
@@ -576,6 +638,7 @@ export default function MessagesPage() {
                 onChange={e => setNewTagline(e.target.value)}
                 placeholder="User#1234"
                 className="vault-input w-full px-4 py-3 text-sm"
+                onKeyDown={e => e.key === 'Enter' && !loadingAction && newTagline.trim() && handleStartDM()}
               />
             </div>
             <p className="text-xs text-primary-100/30 mb-5 flex items-center gap-1.5">
@@ -585,9 +648,11 @@ export default function MessagesPage() {
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              className="w-full btn-primary py-3 text-sm font-bold flex items-center justify-center gap-2"
+              onClick={handleStartDM}
+              disabled={loadingAction || !newTagline.trim()}
+              className="w-full btn-primary py-3 text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <Lock className="w-4 h-4" />
+              {loadingAction ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
               Open Secure Channel
             </motion.button>
           </ModalWrapper>
