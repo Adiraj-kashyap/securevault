@@ -50,7 +50,7 @@ exports.getStorageStats = async (req, res) => {
 
         // Aggregate total file sizes based on logic storage tiers
         const stats = await File.aggregate([
-            { $match: { owner: mongoose.Types.ObjectId(userId) } },
+            { $match: { owner: userId } },
             { $group: { _id: "$storageLevel", totalSize: { $sum: "$size" }, count: { $sum: 1 } } }
         ]);
 

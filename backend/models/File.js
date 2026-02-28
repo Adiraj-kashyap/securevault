@@ -6,8 +6,7 @@ const fileSchema = new mongoose.Schema({
         required: true // The stored name (encrypted in practice, but readable metadata for now)
     },
     owner: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        type: String,
         required: true
     },
     folder: {
