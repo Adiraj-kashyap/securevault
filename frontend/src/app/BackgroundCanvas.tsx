@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useAppearance } from "./AppearanceContext";
 
 /* ─────────────────────────────────────────────────────────────
    Lightweight CSS-variable-aware particle network canvas.
@@ -32,10 +33,13 @@ function getAccentRgb(): string {
 }
 
 export function BackgroundCanvas() {
+    const { particles: showParticles } = useAppearance();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const mouse = useRef({ x: -999, y: -999 });
     const rafId = useRef<number>(0);
     const particles = useRef<Particle[]>([]);
+
+    if (!showParticles) return null;
 
     useEffect(() => {
         const canvas = canvasRef.current;
