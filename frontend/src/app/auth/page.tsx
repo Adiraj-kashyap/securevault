@@ -186,7 +186,7 @@ function AuthForm() {
         const derivedKey = await cryptoUtils.deriveKeyFromPassword(password, res.salt);
         const privateKey = await cryptoUtils.decryptPrivateKey(res.encryptedPrivateKey, derivedKey);
         if (!privateKey) throw new Error("Invalid Master Password. Decryption failed.");
-        setSession({ userId: res.userId, email, token: res.token, derivedAesKey: derivedKey, decryptedPrivateKey: privateKey, publicKey: res.publicKey });
+        setSession({ userId: res.userId, email, tagline: res.tagline, token: res.token, derivedAesKey: derivedKey, decryptedPrivateKey: privateKey, publicKey: res.publicKey });
         setLoading(false);
         setShowSuccess({ email, isLogin: true });
       } else {

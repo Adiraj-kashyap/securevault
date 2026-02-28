@@ -9,6 +9,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 interface VaultSession {
     userId: string;
     email: string;
+    tagline: string;
     token: string;
     derivedAesKey: string;      // Used to encrypt/decrypt local data before transit
     decryptedPrivateKey: string; // The raw RSA Private Key, ready for use

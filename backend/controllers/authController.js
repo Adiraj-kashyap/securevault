@@ -1,5 +1,27 @@
 const User = require('../models/User');
 
+// Helper to generate a unique tagline from email (e.g. "shadow#4921")
+async function generateUniqueTagline(email) {
+    const base = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    let tagline;
+    let isUnique = false;
+    let attempts = 0;
+
+    while (!isUnique && attempts < 100) {
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        tagline = `${base}#${randomNum}`;
+        const existing = await User.findOne({ tagline });
+        if (!existing) isUnique = true;
+        attempts++;
+    }
+
+    // Fallback if somehow namespace is saturated
+    if (!isUnique) {
+        return `${base}#${Date.now().toString().slice(-4)}`;
+    }
+    return tagline;
+}
+
 exports.syncFirebaseUserToMongo = async (req, res) => {
     try {
         // The user is already authenticated via Firebase ID Token (`req.user` mapped in authMiddleware)
@@ -10,19 +32,29 @@ exports.syncFirebaseUserToMongo = async (req, res) => {
         let user = await User.findOne({ uid: firebaseUid });
 
         if (user) {
+            // Retroactively add tagline if missing
+            if (!user.tagline) {
+                user.tagline = await generateUniqueTagline(email);
+            }
             // Update existing user's keys in case they were rotated or it's a login sync
             if (passwordHash) user.masterPasswordHash = passwordHash;
             if (publicKey) user.publicKey = publicKey;
             if (encryptedPrivateKey) user.encryptedPrivateKey = encryptedPrivateKey;
             if (salt) user.salt = salt;
             await user.save();
-            return res.status(200).json({ message: 'User backup synced to MongoDB' });
+            return res.status(200).json({
+                message: 'User backup synced to MongoDB',
+                tagline: user.tagline
+            });
         }
+
+        const tagline = await generateUniqueTagline(email);
 
         // Create new user backup
         user = new User({
             uid: firebaseUid,
             email,
+            tagline,
             masterPasswordHash: passwordHash, // Not a true hash, just a PBKDF2 derivative from the frontend
             publicKey,
             encryptedPrivateKey,
@@ -30,7 +62,10 @@ exports.syncFirebaseUserToMongo = async (req, res) => {
         });
 
         await user.save();
-        res.status(201).json({ message: 'User backup created in MongoDB' });
+        res.status(201).json({
+            message: 'User backup created in MongoDB',
+            tagline: user.tagline
+        });
     } catch (error) {
         console.error('Mongo sync error:', error);
         res.status(500).json({ error: 'Server error during Mongo backup initialization' });
@@ -50,5 +85,26 @@ exports.getPublicKey = async (req, res) => {
     } catch (error) {
         console.error('Fetch PK error:', error);
         res.status(500).json({ error: 'Server error fetching public key' });
+    }
+};
+
+exports.lookupByTagline = async (req, res) => {
+    try {
+        const { tagline } = req.params;
+        const user = await User.findOne({ tagline });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Return public info needed for sharing/messaging without exposing email
+        res.json({
+            tagline: user.tagline,
+            publicKey: user.publicKey,
+            uid: user.uid // Needed for Firebase RTDB messaging paths
+        });
+    } catch (error) {
+        console.error('Lookup tagline error:', error);
+        res.status(500).json({ error: 'Server error looking up user' });
     }
 };

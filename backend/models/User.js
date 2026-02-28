@@ -14,6 +14,12 @@ const UserSchema = new mongoose.Schema({
         lowercase: true,
         trim: true,
     },
+    // Unique identifier for the user (e.g. Shadow#4921) to replace email for privacy
+    tagline: {
+        type: String,
+        unique: true,
+        sparse: true,
+    },
     // The server only stores a hash of the master password for authentication.
     // It NEVER sees the actual master password, which is used client-side to derive the AES key that protects the Private RSA Key.
     masterPasswordHash: {
