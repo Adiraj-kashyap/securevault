@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 import { TransitionLink } from "./VaultTransition";
 import {
   Shield, LayoutDashboard, MessageSquareLock, Settings,
-  LogOut, User, ChevronDown, X, Menu, Lock, Activity,
+  LogOut, User, ChevronDown, X, Menu, Lock, Activity, Mail
 } from "lucide-react";
 
 export function NavbarClient() {
@@ -38,6 +38,7 @@ export function NavbarClient() {
   ];
   const privateLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/mail", label: "Mail", icon: Mail },
     { href: "/messages", label: "Messages", icon: MessageSquareLock },
   ];
 
@@ -164,11 +165,11 @@ export function NavbarClient() {
                 >
                   <div className="w-7 h-7 rounded-lg identicon-placeholder flex items-center justify-center">
                     <span className="font-code text-xs text-accent-300 font-bold">
-                      {session.email[0]?.toUpperCase() ?? "U"}
+                      {(session.tagline || session.email)[0]?.toUpperCase() ?? "U"}
                     </span>
                   </div>
                   <span className="hidden sm:block text-sm font-medium text-primary-100/75 max-w-[100px] truncate">
-                    {session.email}
+                    {session.tagline || session.email}
                   </span>
                   <ChevronDown className={`w-3.5 h-3.5 text-primary-100/40 transition-transform duration-200 ${userMenuOpen ? "rotate-180" : ""}`} />
                 </motion.button>
@@ -190,7 +191,7 @@ export function NavbarClient() {
                     >
                       <div className="px-3 py-2.5 mb-1 border-b border-white/5">
                         <p className="text-[10px] text-primary-100/35 font-code uppercase tracking-widest">Signed in as</p>
-                        <p className="text-sm font-semibold text-primary-100 truncate mt-0.5">{session.email}</p>
+                        <p className="text-sm font-semibold text-primary-100 truncate mt-0.5">{session.tagline || session.email}</p>
                       </div>
                       {[
                         { href: "/profile", label: "Key Fingerprint", icon: User },
