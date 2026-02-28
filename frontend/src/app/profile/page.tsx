@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
     Fingerprint, Copy, Download, KeyRound, Shield, CheckCircle,
@@ -123,31 +123,55 @@ export default function ProfilePage() {
     const router = useRouter();
     const [showKey, setShowKey] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [fingerprint, setFingerprint] = useState("Computing fingerprint...");
+
+    // Compute real SHA-256 fingerprint from public key
+    useEffect(() => {
+        if (!session?.publicKey) return;
+        const computeFingerprint = async () => {
+            try {
+                const enc = new TextEncoder();
+                const data = enc.encode(session.publicKey);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hexString = hashArray.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join('');
+                // Format as colon-separated pairs for readability
+                const formatted = hexString.match(/.{1,4}/g)?.join(':') ?? hexString;
+                setFingerprint(formatted);
+            } catch {
+                setFingerprint('Unable to compute fingerprint');
+            }
+        };
+        computeFingerprint();
+    }, [session?.publicKey]);
 
     if (!session) { router.push("/auth"); return null; }
 
-    // Derive a display fingerprint from the actual public key
-    const fingerprint = (() => {
-        if (!session.publicKey) return "KEY:NOT:YET:GEN:ERAT:ED";
-        // Simple visual hash: take char codes from spread key, format in 4-char hex groups
-        const raw = session.publicKey.replace(/\s/g, "").slice(20, 80);
-        const hashed = Array.from(raw).reduce((a, c) => ((a * 31 + c.charCodeAt(0)) & 0xFFFFFFFF) >>> 0, 0);
-        const hex = hashed.toString(16).toUpperCase().padStart(8, "0");
-        // Build fake-fingerprint from key chars + hash
-        const parts = [];
-        for (let i = 0; i < raw.length; i += 4) {
-            const seg = raw.slice(i, i + 4);
-            const code = Array.from(seg).reduce((a, c) => a + c.charCodeAt(0), 0);
-            parts.push(code.toString(16).toUpperCase().padStart(4, "0"));
-            if (parts.length >= 10) break;
-        }
-        return parts.join(":");
-    })();
-
     const copyKey = () => {
-        navigator.clipboard.writeText("RSA-2048 Public Key (mock)");
+        if (session.publicKey) {
+            navigator.clipboard.writeText(session.publicKey);
+        } else {
+            navigator.clipboard.writeText(fingerprint);
+        }
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+    };
+
+    const copyFingerprint = () => {
+        navigator.clipboard.writeText(fingerprint);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const exportPem = () => {
+        if (!session.publicKey) return;
+        const blob = new Blob([session.publicKey], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `securevault-${session.tagline || 'user'}-public.pem`;
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
     return (
@@ -196,7 +220,7 @@ export default function ProfilePage() {
                     <div className="mt-4 flex gap-2 justify-center">
                         <motion.button
                             whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                            onClick={copyKey}
+                            onClick={copyFingerprint}
                             className="btn-ghost flex items-center gap-2 px-4 py-2 text-sm rounded-xl"
                         >
                             {copied ? <CheckCircle className="w-4 h-4 text-safe" /> : <Copy className="w-4 h-4" />}
@@ -246,9 +270,9 @@ export default function ProfilePage() {
                     {showKey && (
                         <motion.div
                             initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-                            className="code-block text-accent-300/70 text-[11px] overflow-hidden"
+                            className="code-block text-accent-300/70 text-[11px] overflow-auto max-h-40"
                         >
-                            {`-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1234567890abcdef...\n[Your RSA-2048 Public Key]\n-----END PUBLIC KEY-----`}
+                            {session.publicKey || '(Key not available in this session)'}
                         </motion.div>
                     )}
                     <div className="flex gap-2 mt-4">
@@ -257,7 +281,7 @@ export default function ProfilePage() {
                         >
                             <Copy className="w-4 h-4" /> Copy Key
                         </motion.button>
-                        <motion.button whileHover={{ scale: 1.03 }}
+                        <motion.button whileHover={{ scale: 1.03 }} onClick={exportPem}
                             className="btn-ghost flex items-center gap-2 px-4 py-2 text-sm rounded-xl"
                         >
                             <Download className="w-4 h-4" /> Export PEM
