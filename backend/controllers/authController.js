@@ -90,7 +90,9 @@ exports.getPublicKey = async (req, res) => {
 
 exports.lookupByTagline = async (req, res) => {
     try {
-        const { tagline } = req.params;
+        // Supports both /lookup/:tagline (param) and /user-by-tagline?tagline=... (query)
+        const tagline = req.params.tagline || req.query.tagline;
+        if (!tagline) return res.status(400).json({ error: 'tagline is required' });
         const user = await User.findOne({ tagline });
 
         if (!user) {
@@ -99,9 +101,9 @@ exports.lookupByTagline = async (req, res) => {
 
         // Return public info needed for sharing/messaging without exposing email
         res.json({
+            userId: user.uid,
             tagline: user.tagline,
             publicKey: user.publicKey,
-            uid: user.uid // Needed for Firebase RTDB messaging paths
         });
     } catch (error) {
         console.error('Lookup tagline error:', error);

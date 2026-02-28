@@ -7,5 +7,6 @@ const { requireAuth } = require('../config/authMiddleware');
 router.post('/sync', requireAuth, authController.syncFirebaseUserToMongo);
 router.get('/public-key/:email', requireAuth, authController.getPublicKey);
 router.get('/lookup/:tagline', requireAuth, authController.lookupByTagline);
+router.get('/user-by-tagline', requireAuth, authController.lookupByTagline);
 
 module.exports = router;
