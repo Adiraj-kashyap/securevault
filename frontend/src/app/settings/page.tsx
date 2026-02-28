@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Shield, Key, Bell, Lock, ChevronLeft, AlertTriangle,
@@ -69,11 +69,11 @@ function DangerZoneItem({ label, desc, action }: { label: string; desc: string; 
 }
 
 export default function SettingsPage() {
-  const { session } = useSession();
+  const { session, isHydrating } = useSession();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("security");
 
-  // Setting states
+  // Setting states — all hooks must be declared unconditionally (Rules of Hooks)
   const [mfa, setMfa] = useState(false);
   const [sessionLock, setSessionLock] = useState(true);
   const [loginAlerts, setLoginAlerts] = useState(true);
@@ -96,7 +96,11 @@ export default function SettingsPage() {
     successStyle, setSuccessStyle,
   } = useAppearance();
 
-  if (!session) { router.push("/auth"); return null; }
+  useEffect(() => {
+    if (!isHydrating && !session) router.push("/auth");
+  }, [session, isHydrating, router]);
+
+  if (isHydrating || !session) return null;
 
   const TABS: { id: Tab; label: string; icon: any }[] = [
     { id: "security", label: "Security", icon: Shield },

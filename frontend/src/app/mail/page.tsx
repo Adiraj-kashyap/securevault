@@ -23,7 +23,7 @@ interface MailItem {
 }
 
 export default function MailPage() {
-    const { session } = useSession();
+    const { session, isHydrating } = useSession();
     const router = useRouter();
     const [view, setView] = useState<MailView>("inbox");
     const [inbox, setInbox] = useState<MailItem[]>([]);
@@ -41,8 +41,8 @@ export default function MailPage() {
     const [isDecrypting, setIsDecrypting] = useState(false);
 
     useEffect(() => {
-        if (!session) { router.push("/auth"); }
-    }, [session, router]);
+        if (!isHydrating && !session) router.push("/auth");
+    }, [session, isHydrating, router]);
 
     const loadInbox = async () => {
         if (!session) return;
@@ -132,7 +132,7 @@ export default function MailPage() {
         }, 800);
     };
 
-    if (!session) return null;
+    if (isHydrating || !session) return null;
 
     return (
         <div className="max-w-7xl mx-auto pt-28 pb-20 px-4 min-h-screen">

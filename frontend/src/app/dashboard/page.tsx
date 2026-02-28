@@ -109,7 +109,7 @@ function SidebarLink({
 
 /* ── Main Dashboard ─────────────────────────────────────────── */
 export default function Dashboard() {
-  const { session, logout } = useSession();
+  const { session, isHydrating, logout } = useSession();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -123,6 +123,7 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
+    if (isHydrating) return;
     if (!session) { router.push("/auth"); return; }
     const load = async () => {
       setLoading(true);

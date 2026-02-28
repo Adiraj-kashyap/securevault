@@ -38,6 +38,7 @@ interface SessionContextType {
     setSession: (session: VaultSession | null) => void;
     logout: () => void;
     isLocked: boolean;
+    isHydrating: boolean;
     lastActiveAt: number | null;
 }
 
@@ -85,6 +86,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     // Always start null — matches SSR, zero hydration mismatch
     const [session, setSessionState] = useState<VaultSession | null>(null);
     const [isLocked, setIsLocked] = useState(false);
+    const [isHydrating, setIsHydrating] = useState(true);
     const [lastActiveAt, setLastActiveAt] = useState<number | null>(null);
 
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -99,6 +101,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             const stored = sessionStorage.getItem("sv_session");
             if (stored) setSessionState(JSON.parse(stored));
         } catch { /* ignore */ }
+        setIsHydrating(false);
     }, []);
 
     const lock = useCallback(async () => {
@@ -152,7 +155,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }, []);
 
     return (
-        <SessionContext.Provider value={{ session, setSession, logout, isLocked, lastActiveAt }}>
+        <SessionContext.Provider value={{ session, isHydrating, setSession, logout, isLocked, lastActiveAt }}>
             {children}
         </SessionContext.Provider>
     );

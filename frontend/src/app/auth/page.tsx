@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Lock, Mail, KeyRound, ShieldCheck, ArrowRight, Loader2,
@@ -180,6 +180,8 @@ function AuthForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showSuccess, setShowSuccess] = useState<{ email: string; isLogin: boolean } | null>(null);
+  // Holds the session object waiting to be committed after the animation completes
+  const pendingSessionRef = useRef<Parameters<typeof setSession>[0]>(null);
 
   const strength = getPasswordStrength(password);
 
@@ -196,7 +198,8 @@ function AuthForm() {
         const privateKey = await cryptoUtils.decryptPrivateKey(res.encryptedPrivateKey, derivedKey);
         if (!privateKey) throw new Error("Invalid Master Password. Decryption failed.");
         const newSession = { userId: res.userId, email, tagline: res.tagline, token: res.token, derivedAesKey: derivedKey, decryptedPrivateKey: privateKey, publicKey: res.publicKey };
-        setSession(newSession);
+        // Store session in ref — we'll commit it AFTER the animation completes
+        pendingSessionRef.current = newSession;
         // 🚀 Fast preference load — fires in parallel during the animation window (~2.9s)
         api.auth.getPreferences(res.token).then(prefs => {
           if (!prefs) return;
@@ -253,6 +256,11 @@ function AuthForm() {
             isLogin={showSuccess.isLogin}
             onComplete={() => {
               if (showSuccess.isLogin) {
+                // Commit the session NOW (animation done) then navigate
+                if (pendingSessionRef.current) {
+                  setSession(pendingSessionRef.current);
+                  pendingSessionRef.current = null;
+                }
                 router.push("/dashboard");
               } else {
                 setShowSuccess(null);
