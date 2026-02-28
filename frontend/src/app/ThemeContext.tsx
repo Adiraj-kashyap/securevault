@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type ThemeColor = 'gold' | 'emerald' | 'sapphire' | 'amethyst' | 'ruby';
+type ThemeColor = 'gold' | 'emerald' | 'sapphire' | 'amethyst' | 'ruby' | 'neon-cyan' | 'sunset-orange' | 'rose-quartz' | 'toxic-lime';
 
 interface ThemeContextType {
     theme: ThemeColor;
@@ -13,7 +13,6 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [theme, setTheme] = useState<ThemeColor>('gold');
-
     useEffect(() => {
         // Load saved theme on mount
         const saved = localStorage.getItem('vault-theme') as ThemeColor;
