@@ -1,19 +1,19 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-// This context stores highly sensitive keys strictly in React state (Memory).
-// We deliberately DO NOT store the derived AES Key or Private RSA Key in localStorage
-// for extreme security. If the user refreshes the page, they must enter their master password again.
+// Session is always null on first render (matches SSR).
+// After mount, we restore from sessionStorage so refreshing the page rehydrates cleanly.
+// We deliberately DO NOT store the derived AES Key or Private RSA Key in localStorage.
 
 interface VaultSession {
     userId: string;
     email: string;
     tagline: string;
     token: string;
-    derivedAesKey: string;      // Used to encrypt/decrypt local data before transit
-    decryptedPrivateKey: string; // The raw RSA Private Key, ready for use
-    publicKey: string;          // The raw RSA Public Key
+    derivedAesKey: string;
+    decryptedPrivateKey: string;
+    publicKey: string;
 }
 
 interface SessionContextType {
@@ -25,18 +25,19 @@ interface SessionContextType {
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-    const [session, setSessionState] = useState<VaultSession | null>(() => {
-        // Restore from sessionStorage on mount (survives hard reloads within same tab)
-        if (typeof window === "undefined") return null;
+    // Always start null — matches SSR, no hydration mismatch
+    const [session, setSessionState] = useState<VaultSession | null>(null);
+
+    // After mount: restore session from sessionStorage (safe — only runs on client)
+    useEffect(() => {
         try {
             const stored = sessionStorage.getItem("sv_session");
-            return stored ? JSON.parse(stored) : null;
-        } catch { return null; }
-    });
+            if (stored) setSessionState(JSON.parse(stored));
+        } catch { /* ignore */ }
+    }, []);
 
     const setSession = (s: VaultSession | null) => {
         setSessionState(s);
-        if (typeof window === "undefined") return;
         if (s) {
             try { sessionStorage.setItem("sv_session", JSON.stringify(s)); } catch { }
         } else {
@@ -62,3 +63,4 @@ export function useSession() {
     }
     return context;
 }
+
