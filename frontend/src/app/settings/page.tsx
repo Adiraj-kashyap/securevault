@@ -116,7 +116,7 @@ export default function SettingsPage() {
           <Settings className="w-7 h-7 text-accent-500" />
           <div>
             <h1 className="font-display font-extrabold text-3xl text-primary-100">Settings</h1>
-            <p className="text-primary-100/40 text-sm">{session.email}</p>
+            <p className="text-primary-100/40 text-sm">{session.tagline || session.email}</p>
           </div>
         </div>
 

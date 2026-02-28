@@ -173,9 +173,9 @@ export default function ProfilePage() {
                     <div className="absolute inset-0 dot-bg opacity-20 pointer-events-none" />
                     <div className="relative z-10">
                         <div className="flex justify-center mb-5">
-                            <IdentIcon email={session.email} />
+                            <IdentIcon email={session.tagline || session.email} />
                         </div>
-                        <h1 className="font-display font-extrabold text-2xl text-primary-100 mb-1">{session.email}</h1>
+                        <h1 className="font-display font-extrabold text-2xl text-primary-100 mb-1">{session.tagline || session.email}</h1>
                         <div className="flex items-center justify-center gap-2 text-xs text-primary-100/40">
                             <span className="w-1.5 h-1.5 rounded-full status-online" />
                             <span className="font-code">Vault Active · RSA-2048 · AES-256</span>
