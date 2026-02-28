@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "./ThemeContext";
 import { SessionProvider } from "./SessionContext";
 import { NavbarClient } from "./NavbarClient";
+import { BackgroundCanvas } from "./BackgroundCanvas";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,8 +48,11 @@ export default function RootLayout({
       <body className="min-h-screen bg-primary-900 text-primary-100 overflow-x-hidden">
         <SessionProvider>
           <ThemeProvider>
-            {/* Ambient background mesh — always present */}
-            <div className="fixed inset-0 pointer-events-none z-0" aria-hidden>
+            {/* Interactive particle network — behind everything */}
+            <BackgroundCanvas />
+
+            {/* Ambient orb layer on top of canvas */}
+            <div className="fixed inset-0 pointer-events-none z-[1]" aria-hidden>
               <div className="orb-top-left" />
               <div className="orb-bottom-right" />
             </div>

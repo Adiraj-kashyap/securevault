@@ -20,7 +20,10 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Initialize Realtime Database and get a reference to the service
 const database = getDatabase(app);
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
+
+// Auth and Providers often crash in Next.js SSR when using the browser bundle, 
+// because they look for window or location. We initialize them only if window is defined.
+const auth = typeof window !== "undefined" ? getAuth(app) : null as any;
+const googleProvider = typeof window !== "undefined" ? new GoogleAuthProvider() : null as any;
 
 export { app, database, auth, googleProvider };
