@@ -1,0 +1,168 @@
+# SecureVault — Frontend Audit
+
+_Last updated: 2026-02-28_
+
+## Legend
+- ✅ Good / Working
+- ⚠️ Gap / Needs fix
+- ❌ Broken / Missing
+- 🔒 Behind auth guard
+- 🌐 Public page (no auth needed — correct)
+
+---
+
+## Page-by-Page Audit
+
+### 1. `/` — Landing Page 🌐
+| Check | Status | Note |
+|-------|--------|------|
+| Renders | ✅ | |
+| CTA buttons → auth | ✅ | Uses [TransitionLink](file:///d:/Code%20Learning/WebP/SecretVault/securevault/frontend/src/app/VaultTransition.tsx#248-274) |
+| Navbar CTAs | ✅ | Sign In / Get Started |
+| "Enterprise Plans" CTA | ⚠️ | Uses `<Link>` → `/pricing` (soft nav, ok) |
+| "Create Your Vault" CTA | ✅ | Links to `/auth?mode=register` |
+| Footer visible | ✅ | |
+
+### 2. `/auth` — Login / Register 🌐
+| Check | Status | Note |
+|-------|--------|------|
+| Login flow | ✅ | API call + auth success animation |
+| Register flow | ✅ | Generates RSA keypair + success anim |
+| Password strength meter | ✅ | |
+| Redirect to `/dashboard` after login | ✅ | Via `onComplete` callback |
+| Register → lands on Login tab | ✅ | |
+| Session clears on refresh | ⚠️ | In-memory only — **fix: add sessionStorage persistence** |
+
+### 3. `/dashboard` — Main Vault 🔒
+| Check | Status | Note |
+|-------|--------|------|
+| Auth guard | ✅ | `if (!session) return null` |
+| Sidebar layout | ✅ | Fixed overflow, flex-shrink-0 storage+sign-out |
+| Footer overlap | ⚠️ | Footer still shows under sidebar on scroll — **fix: hide footer on app routes** |
+| File listing from API | ✅ | `api.vault.list()` called |
+| Folder navigation breadcrumbs | ✅ | |
+| Stat cards (hot/warm/cold) | ✅ | |
+| Search | ✅ | Client-side filter |
+| View modes (grid/list) | ✅ | |
+| Upload button → `/dashboard/upload` | ✅ | |
+
+### 4. `/dashboard/upload` — File Upload 🔒
+| Check | Status | Note |
+|-------|--------|------|
+| Auth guard | ✅ | [useSession](file:///d:/Code%20Learning/WebP/SecretVault/securevault/frontend/src/app/SessionContext.tsx#41-48) checked |
+| File picker | ✅ | |
+| Drag-and-drop | ✅ | |
+| Tier selection (hot/warm/cold) | ✅ | |
+| Encryption before upload | ✅ | `cryptoUtils` used |
+| API call | ✅ | `api.vault.upload()` |
+| Back link → `/dashboard` | ✅ | |
+
+### 5. `/features` — Feature Catalog 🌐
+| Check | Status | Note |
+|-------|--------|------|
+| Renders | ✅ | |
+| Category filter tabs | ✅ | |
+| Links to steganography/dead-mans-switch | ✅ | |
+| No auth needed | ✅ | Correct — marketing page |
+| CTA "Get Started Free" → `/auth` | ✅ | |
+
+### 6. `/architecture` — Technical Architecture 🌐
+| Check | Status | Note |
+|-------|--------|------|
+| Renders | ✅ | |
+| No auth needed | ✅ | Correct — marketing page |
+| Internal links | ✅ | |
+
+### 7. `/pricing` — Enterprise Plans 🌐
+| Check | Status | Note |
+|-------|--------|------|
+| Renders | ✅ | |
+| Plan cards | ✅ | Free / Pro / Enterprise |
+| "Start Free" CTA → `/auth?mode=register` | ✅ | |
+| Billing toggle (monthly/annual) | ✅ | |
+| No auth guard | ✅ | Correct — marketing page |
+| **Root cause of "sign-out"**: navigating here from session does NOT clear session | ✅ | Session is in-memory — if hard reload happens anywhere, session is lost |
+
+### 8. `/messages` — E2E Messaging 🔒
+| Check | Status | Note |
+|-------|--------|------|
+| Auth guard | ✅ | `useEffect → router.push('/auth')` |
+| Mock conversations shown | ✅ | |
+| Real Firebase integration | ❌ | Mock data only — Firebase messaging not wired |
+| Send message works visually | ✅ | Local state update |
+| Burn-after-read toggle | ✅ | UI only |
+| New contact modal | ✅ | UI only |
+
+### 9. `/audit-log` — Security Audit Log 🔒
+| Check | Status | Note |
+|-------|--------|------|
+| Auth guard | ✅ | [useSession](file:///d:/Code%20Learning/WebP/SecretVault/securevault/frontend/src/app/SessionContext.tsx#41-48) + redirect |
+| Mock audit events shown | ✅ | |
+| Real API integration | ❌ | Mock data — needs `api.audit.list()` |
+| Filters (type/severity) | ✅ | |
+| Export | ✅ | UI only |
+
+### 10. `/profile` — Key Profile 🔒
+| Check | Status | Note |
+|-------|--------|------|
+| Auth guard | ✅ | `if (!session) router.push('/auth')` |
+| Snake identicon | ✅ | _(fixed this session)_ |
+| Fingerprint display | ✅ | Mock data |
+| Key export | ✅ | Mock public key |
+| Real key from session | ⚠️ | Shows mock fingerprint, not actual `session.publicKey` fingerprint |
+
+### 11. `/settings` — Settings 🔒
+| Check | Status | Note |
+|-------|--------|------|
+| Auth guard | ✅ | `if (!session) router.push('/auth')` |
+| Security tab | ✅ | Toggles (UI only — no real MFA) |
+| Storage tab | ✅ | Tier selection (UI only) |
+| Notifications tab | ✅ | Toggles (UI only) |
+| Appearance tab | ✅ | Added 6 sections _(this session)_ |
+| Appearance actually applies | ❌ | Options are toggles only — no CSS vars updated, no context |
+
+### 12. `/steganography` — Hidden Volumes 🌐
+| Check | Status | Note |
+|-------|--------|------|
+| No auth guard | ✅ | **Correct** — coming-soon marketing/info page |
+| Demo sim works | ✅ | |
+| Waitlist email form | ✅ | UI only |
+| "Back to Features" link | ✅ | |
+
+### 13. `/dead-mans-switch` — Dead Man's Switch 🌐
+| Check | Status | Note |
+|-------|--------|------|
+| No auth guard | ✅ | **Correct** — coming-soon marketing/info page |
+| Configuration UI | ✅ | Days/action/contacts (UI only) |
+| Countdown ring | ✅ | |
+| Beta waitlist form | ✅ | UI only |
+
+---
+
+## Navigation & Auth Flow Gaps
+
+| Gap | Impact | Fix |
+|-----|--------|-----|
+| Session lost on hard reload | 🔴 High | Add `sessionStorage` persistence to [SessionContext](file:///d:/Code%20Learning/WebP/SecretVault/securevault/frontend/src/app/SessionContext.tsx#18-23) |
+| Footer shows on app pages (dashboard/settings/profile etc.) | 🟡 Medium | Hide footer on app routes via `usePathname` |
+| Navbar: no active-state highlighting for current page | 🟡 Medium | Add `usePathname` → highlight active nav link |
+| Some nav links open with `<a>` not `<Link>` → hard reload possible | 🟡 Medium | Audit all `<a href>` usages |
+| Profile shows mock fingerprint not real key | 🟡 Medium | Use `session.publicKey` to derive fingerprint |
+| Messages/Audit-log use 100% mock data | 🟡 Medium | Wire Firebase / backend API |
+
+---
+
+## Summary: Deployment Readiness
+
+| Category | Ready? |
+|----------|--------|
+| Public marketing pages (/, /features, /architecture, /pricing, /steganography, /dead-mans-switch) | ✅ |
+| Auth flow (login + register + animation) | ✅ |
+| Core dashboard (view files, folders, stats) | ✅ |
+| File upload with real encryption | ✅ |
+| Session persistence across navigation | ❌ Fix needed |
+| Footer/layout on app pages | ❌ Fix needed |
+| Real Firebase messaging | ❌ Not wired |
+| Real audit log from backend | ❌ Not wired |
+| Appearance settings actually applying | ❌ Not wired |
+| Profile showing real key fingerprint | ⚠️ Needs wiring |

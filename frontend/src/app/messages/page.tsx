@@ -4,10 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquare, Send, Lock, Shield, Search, Plus,
-  MoreVertical, Flame, CheckCheck, Clock, User, X, AlertTriangle
+  MoreVertical, Flame, CheckCheck, Clock, User, X, AlertTriangle, Loader2
 } from "lucide-react";
 import { useSession } from "../SessionContext";
 import { useRouter } from "next/navigation";
+import { database } from "@/lib/firebase";
+import { ref, push, onValue, off, serverTimestamp, remove, set } from "firebase/database";
 
 /* ── Mock data for UI demonstration ────────────────────────── */
 interface Message {
@@ -31,16 +33,16 @@ interface Conversation {
 }
 
 const MOCK_CONVOS: Conversation[] = [
-  { id: "1", name: "Alice K.",  email: "alice@example.com",  lastMessage: "[Encrypted Message]", lastTime: new Date(Date.now() - 120000), unread: 2, online: true  },
-  { id: "2", name: "Bob M.",    email: "bob@example.com",    lastMessage: "[Encrypted Message]", lastTime: new Date(Date.now() - 3600000), unread: 0, online: false },
-  { id: "3", name: "Carol S.",  email: "carol@example.com",  lastMessage: "[Encrypted Message]", lastTime: new Date(Date.now() - 86400000), unread: 0, online: true },
+  { id: "1", name: "Alice K.", email: "alice@example.com", lastMessage: "[Encrypted Message]", lastTime: new Date(Date.now() - 120000), unread: 2, online: true },
+  { id: "2", name: "Bob M.", email: "bob@example.com", lastMessage: "[Encrypted Message]", lastTime: new Date(Date.now() - 3600000), unread: 0, online: false },
+  { id: "3", name: "Carol S.", email: "carol@example.com", lastMessage: "[Encrypted Message]", lastTime: new Date(Date.now() - 86400000), unread: 0, online: true },
 ];
 
 function timeAgo(date: Date): string {
   const sec = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (sec < 60)   return "just now";
+  if (sec < 60) return "just now";
   if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
-  if (sec < 86400)return `${Math.floor(sec / 3600)}h ago`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
   return date.toLocaleDateString();
 }
 
@@ -59,47 +61,82 @@ function EncryptionShield() {
 
 export default function MessagesPage() {
   const { session } = useSession();
-  const router      = useRouter();
-  const [selected, setSelected]     = useState<string | null>(null);
-  const [messages, setMessages]     = useState<Message[]>([]);
-  const [input, setInput]           = useState("");
-  const [burnMode, setBurnMode]     = useState(false);
-  const [search, setSearch]         = useState("");
+  const router = useRouter();
+  const [selected, setSelected] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [convos, setConvos] = useState<Conversation[]>(MOCK_CONVOS);
+  const [input, setInput] = useState("");
+  const [burnMode, setBurnMode] = useState(false);
+  const [search, setSearch] = useState("");
   const [newContact, setNewContact] = useState(false);
-  const [newEmail, setNewEmail]     = useState("");
-  const bottomRef  = useRef<HTMLDivElement>(null);
+  const [newEmail, setNewEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!session) { router.push("/auth"); }
-  }, [session]);
+  }, [session, router]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Real-time Firebase listener for selected conversation
   useEffect(() => {
-    if (selected) {
-      // Simulate loading messages from Firebase
-      setMessages([
-        { id: "1", from: "them", content: "[Decrypted] Hey! Did you get the documents I sent?", timestamp: new Date(Date.now() - 300000), encrypted: true },
-        { id: "2", from: "me",   content: "[Decrypted] Yes, reviewing them now. Strong AES wrap on those.", timestamp: new Date(Date.now() - 240000), encrypted: true },
-        { id: "3", from: "them", content: "[Decrypted] Good. Let me know if the key decryption works properly.", timestamp: new Date(Date.now() - 120000), encrypted: true, read: true },
-      ]);
-    }
-  }, [selected]);
+    if (!selected || !session) return;
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    setMessages(prev => [...prev, {
-      id:           Date.now().toString(),
-      from:         "me",
-      content:      `[Encrypted] ${input}`,
-      timestamp:    new Date(),
-      encrypted:    true,
-      burnAfterRead: burnMode,
-    }]);
-    setInput("");
+    // Sort UIDs to create a stable conversation key
+    const convoKey = [session.userId, selected].sort().join("_");
+    const msgRef = ref(database, `messages/${convoKey}`);
+
+    const unsubscribe = onValue(msgRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) { setMessages([]); return; }
+      const loaded: Message[] = Object.entries(data).map(([id, val]: any) => ({
+        id,
+        from: val.senderId === session.userId ? "me" : "them",
+        content: val.content,
+        timestamp: new Date(val.timestamp),
+        encrypted: true,
+        burnAfterRead: val.burnAfterRead ?? false,
+        read: val.read ?? false,
+      }));
+      loaded.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      setMessages(loaded);
+
+      // Mark burn-after-read messages as read and schedule deletion
+      Object.entries(data).forEach(([id, val]: any) => {
+        if (val.burnAfterRead && val.senderId !== session.userId && !val.read) {
+          set(ref(database, `messages/${convoKey}/${id}/read`), true);
+          setTimeout(() => remove(ref(database, `messages/${convoKey}/${id}`)), 30000);
+        }
+      });
+    });
+
+    return () => off(msgRef);
+  }, [selected, session]);
+
+  const sendMessage = async () => {
+    if (!input.trim() || !selected || !session) return;
+    setSending(true);
+    try {
+      const convoKey = [session.userId, selected].sort().join("_");
+      await push(ref(database, `messages/${convoKey}`), {
+        senderId: session.userId,
+        content: input.trim(), // In production: encrypt with recipient public key before push
+        timestamp: Date.now(),
+        encrypted: true,
+        burnAfterRead: burnMode,
+        read: false,
+      });
+      setInput("");
+    } catch (e) {
+      console.error("Message send failed:", e);
+    } finally {
+      setSending(false);
+    }
   };
+
 
   if (!session) return null;
 
@@ -147,11 +184,10 @@ export default function MessagesPage() {
               key={convo.id}
               whileHover={{ x: 2 }}
               onClick={() => setSelected(convo.id)}
-              className={`w-full p-3 rounded-xl text-left transition-all ${
-                selected === convo.id
-                  ? "bg-accent-900/30 border border-accent-800/40"
-                  : "hover:bg-white/5 border border-transparent"
-              }`}
+              className={`w-full p-3 rounded-xl text-left transition-all ${selected === convo.id
+                ? "bg-accent-900/30 border border-accent-800/40"
+                : "hover:bg-white/5 border border-transparent"
+                }`}
             >
               <div className="flex items-start gap-3">
                 <div className="relative flex-shrink-0">
@@ -218,11 +254,10 @@ export default function MessagesPage() {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setBurnMode(v => !v)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                          burnMode
-                            ? "bg-danger/20 text-danger border border-danger/30"
-                            : "btn-ghost"
-                        }`}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${burnMode
+                          ? "bg-danger/20 text-danger border border-danger/30"
+                          : "btn-ghost"
+                          }`}
                       >
                         <Flame className="w-3.5 h-3.5" />
                         {burnMode ? "Burn: ON" : "Burn After Read"}
@@ -258,11 +293,10 @@ export default function MessagesPage() {
                   )}
                   <div className={`max-w-[70%] space-y-1 ${msg.from === "me" ? "items-end" : "items-start"} flex flex-col`}>
                     <div
-                      className={`px-4 py-3 rounded-2xl text-sm leading-relaxed relative ${
-                        msg.from === "me"
-                          ? "glass-ultra rounded-br-sm border border-accent-800/30 text-primary-100"
-                          : "glass rounded-bl-sm text-primary-100"
-                      }`}
+                      className={`px-4 py-3 rounded-2xl text-sm leading-relaxed relative ${msg.from === "me"
+                        ? "glass-ultra rounded-br-sm border border-accent-800/30 text-primary-100"
+                        : "glass rounded-bl-sm text-primary-100"
+                        }`}
                     >
                       {msg.burnAfterRead && (
                         <div className="flex items-center gap-1 text-[9px] text-danger/70 font-code mb-1">
@@ -300,7 +334,7 @@ export default function MessagesPage() {
                   <textarea
                     value={input}
                     onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }}}
+                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                     placeholder="Type an encrypted message..."
                     rows={1}
                     className="vault-input w-full px-4 py-3 pr-10 text-sm resize-none"
@@ -312,10 +346,12 @@ export default function MessagesPage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={sendMessage}
-                  disabled={!input.trim()}
+                  disabled={!input.trim() || sending}
                   className="w-10 h-10 rounded-xl btn-primary flex items-center justify-center flex-shrink-0 disabled:opacity-40"
                 >
-                  <Send className="w-4 h-4" />
+                  {sending
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <Send className="w-4 h-4" />}
                 </motion.button>
               </div>
             </div>

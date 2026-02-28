@@ -180,8 +180,13 @@ export function NavbarClient() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ type: "spring", stiffness: 320, damping: 26 }}
-                      className="absolute right-0 mt-2 w-54 glass-nav border border-white/8 rounded-2xl shadow-2xl p-2 z-[60] origin-top-right"
-                      style={{ width: "220px" }}
+                      className="absolute right-0 mt-2 z-[60] origin-top-right rounded-2xl shadow-2xl p-2 border border-white/10 overflow-hidden"
+                      style={{
+                        width: "220px",
+                        background: "rgba(10, 10, 14, 0.97)",
+                        backdropFilter: "blur(24px)",
+                        boxShadow: "0 24px 60px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.05)",
+                      }}
                     >
                       <div className="px-3 py-2.5 mb-1 border-b border-white/5">
                         <p className="text-[10px] text-primary-100/35 font-code uppercase tracking-widest">Signed in as</p>

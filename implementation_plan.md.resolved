@@ -1,0 +1,83 @@
+# SecureVault — Fixes + Full Appearance System
+
+## Root Causes Identified
+
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| Enterprise signs out | Session is in-memory only; any hard-nav or page reload clears it | Persist session to `sessionStorage` |
+| Snake re-centers | `useEffect([dir])` restarts interval on every turn → resets snake | Use `useRef` for dir, single stable interval |
+| Sidebar/footer overlap | Fixed `bottom-0` sidebar overlaps page footer | Hide footer on app-only routes |
+| Dropdown opacity | `glass-nav` too transparent | Solid dark background for dropdown |
+| Appearance settings don't work | Only visual toggles, no context applying changes | `AppearanceContext` writes to CSS vars + classes |
+
+---
+
+## Proposed Changes
+
+### 1. [SessionContext.tsx](file:///d:/Code%20Learning/WebP/SecretVault/securevault/frontend/src/app/SessionContext.tsx) — Session Persistence
+- On `setSession`: write to `sessionStorage` (secure tab-scoped, clears on tab close)
+- On mount: restore from `sessionStorage`
+- On [logout](file:///d:/Code%20Learning/WebP/SecretVault/securevault/frontend/src/app/SessionContext.tsx#29-33): clear `sessionStorage`
+
+### 2. [profile/page.tsx](file:///d:/Code%20Learning/WebP/SecretVault/securevault/frontend/src/app/profile/page.tsx) — Snake Fix
+- Move `dir` to `useRef` instead of `useState` — direction changes no longer restart the interval
+- Single stable `useEffect([], [])` interval 
+- Snake roams aimlessly forever (no length-reset), just bounces off walls with random direction
+
+### 3. [layout.tsx](file:///d:/Code%20Learning/WebP/SecretVault/securevault/frontend/src/app/layout.tsx) — Hide Footer on App Routes
+- Detect path via `usePathname` (in a new `FooterGuard` client component)
+- Hide footer when path starts with `/dashboard`, `/settings`, `/profile`, `/messages`, `/audit-log`, `/vault-sharing`, `/profile`
+
+### 4. [NavbarClient.tsx](file:///d:/Code%20Learning/WebP/SecretVault/securevault/frontend/src/app/NavbarClient.tsx) — Dropdown Opacity Fix
+- Change dropdown background from `glass-nav` to a near-opaque dark panel
+
+### 5. `AppearanceContext.tsx` [NEW] — Full Appearance System
+Stores all settings, persisted to `localStorage`. Exposes:
+- `bgStyle`: `"none" | "dots" | "grid" | "hex" | "circuit" | "matrix"`  
+- `transitionStyle`: `"iris" | "shatter" | "portal"`  
+- `successStyle`: `"handshake" | "decrypt" | "assemble"`  
+- `glowIntensity`: 0–100 (CSS var override)  
+- `motionLevel`: `"full" | "reduced" | "none"`  
+- `fontStyle`: `"syne" | "inter" | "mono"`  
+- `density`: `"compact" | "default" | "spacious"`  
+- `borderRadius`: `"sharp" | "normal" | "round"`  
+
+Applies changes instantly via `document.body.dataset.*` and CSS variables.
+
+### 6. [VaultTransition.tsx](file:///d:/Code%20Learning/WebP/SecretVault/securevault/frontend/src/app/VaultTransition.tsx) — 3 Transition Styles
+- **Iris** (current): glowing ring from click origin ← keep  
+- **Shatter**: screen fractures into grid tiles that scatter  
+- **Portal**: a swirling vortex/wormhole expands from center  
+Reads `transitionStyle` from `AppearanceContext`.
+
+### 7. [AuthSuccessAnimation.tsx](file:///d:/Code%20Learning/WebP/SecretVault/securevault/frontend/src/app/AuthSuccessAnimation.tsx) — 3 Success Styles  
+- **Handshake** (current): hex rain → scanner → scramble text → ring ← keep  
+- **Decrypt**: green matrix characters decode top-to-bottom revealing dashboard  
+- **Assemble**: page content fragments fly in from different directions  
+Reads `successStyle` from `AppearanceContext`.
+
+### 8. [settings/page.tsx](file:///d:/Code%20Learning/WebP/SecretVault/securevault/frontend/src/app/settings/page.tsx) — Fully Wired Appearance Tab
+Replaces the current Appearance tab with a comprehensive live-preview system:
+- Each section has a **▶ Preview** button that opens a demo modal
+- All toggles/selectors actually call `AppearanceContext` setters
+- Live glow slider updates the CSS var in real time
+
+### 9. `AppearanceDemo.tsx` [NEW] — Demo Modal
+- A modal overlay (`z-[200]`) that demonstrates the selected option
+- Background styles: shows the pattern in a miniaturized container  
+- Transition styles: plays the transition animation in a contained box  
+- Success styles: plays the auth success animation preview  
+
+---
+
+## Verification Plan
+
+1. Navigate to Enterprise page while signed in — session should persist
+2. Profile page — snake roams forever without resetting
+3. Dashboard — sidebar doesn't overlap footer (footer hidden on app routes)
+4. Dropdown opens over sidebar cleanly
+5. Settings → Appearance → change bg style → body background updates live
+6. Settings → Appearance → adjust glow slider → glow updates across the UI
+7. Settings → Appearance → click Preview on each category → demo modal shows
+8. Change transition style → vault iris/shatter/portal plays on next nav
+9. All choices persist across page refresh (localStorage)

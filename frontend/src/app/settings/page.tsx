@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useSession } from "../SessionContext";
 import { useRouter } from "next/navigation";
 import { ThemeSelector } from "../ThemeSelector";
+import { useAppearance } from "../AppearanceContext";
 
 type Tab = "security" | "storage" | "notifications" | "appearance";
 
@@ -81,15 +82,17 @@ export default function SettingsPage() {
   const [uploadNotifs, setUploadNotifs] = useState(true);
   const [msgNotifs, setMsgNotifs] = useState(true);
 
-  // Appearance states
-  const [particles, setParticles] = useState(true);
-  const [pageTransition, setPageTransition] = useState(true);
-  const [motionLevel, setMotionLevel] = useState<"full" | "reduced" | "none">("full");
-  const [borderRadius, setBorderRadius] = useState<"sharp" | "normal" | "round">("normal");
-  const [fontStyle, setFontStyle] = useState<"inter" | "mono" | "syne">("syne");
-  const [density, setDensity] = useState<"compact" | "default" | "spacious">("default");
-  const [glowIntensity, setGlowIntensity] = useState(70);
-  const [bgPattern, setBgPattern] = useState<"none" | "dots" | "grid" | "hex">("hex");
+  // Appearance — pulled from AppearanceContext (persisted, applies globally)
+  const {
+    particles, setParticles,
+    pageTransition, setPageTransition,
+    motionLevel, setMotionLevel,
+    borderRadius, setBorderRadius,
+    fontStyle, setFontStyle,
+    density, setDensity,
+    glowIntensity, setGlowIntensity,
+    bgPattern, setBgPattern,
+  } = useAppearance();
 
   if (!session) { router.push("/auth"); return null; }
 
@@ -124,8 +127,8 @@ export default function SettingsPage() {
               key={id}
               onClick={() => setTab(id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap flex-1 justify-center ${tab === id
-                  ? "bg-accent-500 text-primary-900"
-                  : "text-primary-100/50 hover:text-primary-100"
+                ? "bg-accent-500 text-primary-900"
+                : "text-primary-100/50 hover:text-primary-100"
                 }`}
             >
               <Icon className="w-4 h-4" />
@@ -298,17 +301,25 @@ export default function SettingsPage() {
               <h2 className="font-semibold text-base text-primary-100 mb-1 flex items-center gap-2">
                 <LayoutGrid className="w-4 h-4 text-accent-500" /> Background Pattern
               </h2>
-              <p className="text-xs text-primary-100/35 mb-4">Subtle texture behind page content.</p>
-              <div className="grid grid-cols-4 gap-3">
-                {(["none", "dots", "grid", "hex"] as const).map(p => (
+              <p className="text-xs text-primary-100/35 mb-4">Subtle texture rendered behind all page content.</p>
+              <div className="grid grid-cols-3 gap-3">
+                {([
+                  { id: "none", label: "Off", desc: "No texture" },
+                  { id: "dots", label: "Dots", desc: "Dot grid" },
+                  { id: "grid", label: "Grid", desc: "Line grid" },
+                  { id: "hex", label: "Hex", desc: "Honeycomb" },
+                  { id: "circuit", label: "Circuit", desc: "PCB lines" },
+                  { id: "matrix", label: "Matrix", desc: "Rain lines" },
+                ] as const).map(p => (
                   <motion.button
-                    key={p}
+                    key={p.id}
                     whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
-                    onClick={() => setBgPattern(p)}
-                    className={`glass-card p-3 rounded-xl text-center border-2 transition-all capitalize text-sm ${bgPattern === p ? "border-accent-500/60 text-accent-400" : "border-transparent text-primary-100/45"
+                    onClick={() => setBgPattern(p.id)}
+                    className={`glass-card p-3 rounded-xl text-left border-2 transition-all ${bgPattern === p.id ? "border-accent-500/60" : "border-transparent"
                       }`}
                   >
-                    {p === "none" ? "Off" : p}
+                    <p className={`text-sm font-semibold mb-0.5 ${bgPattern === p.id ? "text-accent-400" : "text-primary-100/70"}`}>{p.label}</p>
+                    <p className="text-[10px] text-primary-100/30">{p.desc}</p>
                   </motion.button>
                 ))}
               </div>

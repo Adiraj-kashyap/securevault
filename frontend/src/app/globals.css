@@ -1055,3 +1055,123 @@ body {
     0 0 0 1px rgba(var(--theme-glow-rgb), 0.1),
     0 0 40px rgba(var(--theme-glow-rgb), 0.06);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   APPEARANCE SYSTEM — AppearanceContext driven CSS
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Glow intensity override ── */
+html {
+  --glow-intensity: 0.7;
+  /* default, overridden by JS */
+}
+
+/* ── Background Patterns ── */
+html[data-bg-pattern="dots"] body::before,
+html[data-bg-pattern="grid"] body::before,
+html[data-bg-pattern="hex"] body::before,
+html[data-bg-pattern="circuit"] body::before,
+html[data-bg-pattern="matrix"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.045;
+}
+
+html[data-bg-pattern="dots"] body::before {
+  background-image: radial-gradient(circle, rgba(var(--theme-glow-rgb), 1) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+html[data-bg-pattern="grid"] body::before {
+  background-image:
+    linear-gradient(rgba(var(--theme-glow-rgb), 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--theme-glow-rgb), 0.5) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+html[data-bg-pattern="hex"] body::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52'%3E%3Cpolygon points='30,1 56,15 56,43 30,57 4,43 4,15' fill='none' stroke='white' stroke-width='0.7'/%3E%3C/svg%3E");
+  background-size: 60px 52px;
+  opacity: 0.035;
+}
+
+html[data-bg-pattern="circuit"] body::before {
+  background-image:
+    linear-gradient(rgba(var(--theme-glow-rgb), 0.4) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--theme-glow-rgb), 0.4) 1px, transparent 1px),
+    radial-gradient(circle 2px at 50% 50%, rgba(var(--theme-glow-rgb), 0.7) 0%, transparent 100%);
+  background-size: 48px 48px, 48px 48px, 48px 48px;
+  opacity: 0.06;
+}
+
+html[data-bg-pattern="matrix"] body::before {
+  /* Vertical lines for matrix feel */
+  background-image: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 18px,
+      rgba(var(--theme-glow-rgb), 0.12) 18px,
+      rgba(var(--theme-glow-rgb), 0.12) 19px),
+    repeating-linear-gradient(90deg,
+      transparent,
+      transparent 10px,
+      rgba(var(--theme-glow-rgb), 0.04) 10px,
+      rgba(var(--theme-glow-rgb), 0.04) 11px);
+  opacity: 1;
+}
+
+/* ── Density ── */
+html[data-density="compact"] {
+  --density-space: 0.75;
+}
+
+html[data-density="spacious"] {
+  --density-space: 1.35;
+}
+
+html[data-density="compact"] main {
+  font-size: 0.9rem;
+}
+
+html[data-density="spacious"] main {
+  font-size: 1.05rem;
+}
+
+/* ── Border Radius personality ── */
+html[data-radius="sharp"] {
+  --radius-card: 6px;
+  --radius-btn: 4px;
+}
+
+html[data-radius="normal"] {
+  --radius-card: 16px;
+  --radius-btn: 12px;
+}
+
+html[data-radius="round"] {
+  --radius-card: 28px;
+  --radius-btn: 999px;
+}
+
+/* ── Font switching ── */
+html[data-font="inter"] {
+  --font-display: 'Inter', system-ui, sans-serif;
+}
+
+html[data-font="mono"] {
+  --font-display: 'JetBrains Mono', monospace;
+  --font-sans: 'JetBrains Mono', monospace;
+}
+
+/* ── Motion preferences ── */
+html[data-motion="reduced"] * {
+  animation-duration: 0.05s !important;
+  transition-duration: 0.05s !important;
+}
+
+html[data-motion="none"] * {
+  animation: none !important;
+  transition: none !important;
+}
