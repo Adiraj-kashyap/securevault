@@ -18,8 +18,11 @@ export function NavbarClient() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  // mounted guard: prevents hydration mismatch from session-based conditional rendering
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -81,9 +84,9 @@ export function NavbarClient() {
             </span>
           </Link>
 
-          {/* Desktop Links */}
+          {/* Desktop Links — only rendered after mount to avoid hydration mismatch */}
           <div className="hidden md:flex items-center gap-1">
-            {session
+            {mounted && session
               ? privateLinks.map(({ href, label, icon: Icon }) => {
                 const active = isActive(href);
                 return (
@@ -109,7 +112,7 @@ export function NavbarClient() {
                 );
               })
               : publicLinks.map(({ href, label }) => {
-                const active = isActive(href);
+                const active = mounted && isActive(href);
                 return (
                   <Link key={href} href={href}>
                     <motion.div
@@ -222,7 +225,7 @@ export function NavbarClient() {
                   )}
                 </AnimatePresence>
               </div>
-            ) : (
+            ) : mounted ? (
               <div className="hidden sm:flex items-center gap-2">
                 <TransitionLink href="/auth">
                   <motion.button
@@ -243,7 +246,7 @@ export function NavbarClient() {
                   </motion.button>
                 </TransitionLink>
               </div>
-            )}
+            ) : null}
 
             {/* Mobile hamburger */}
             <motion.button
@@ -277,12 +280,12 @@ export function NavbarClient() {
                 animate="show"
                 className="p-4 space-y-1"
               >
-                {(session ? privateLinks : publicLinks).map((link) => (
+                {(mounted ? (session ? privateLinks : publicLinks) : publicLinks).map((link) => (
                   <motion.div key={link.href} variants={mobileItemVariants}>
                     <Link
                       href={link.href}
                       onClick={() => setMobileOpen(false)}
-                      className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all ${isActive(link.href)
+                      className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all ${mounted && isActive(link.href)
                         ? "bg-accent-900/30 text-accent-300 border border-accent-800/30"
                         : "text-primary-100/60 hover:text-primary-100 hover:bg-white/5"
                         }`}
@@ -292,7 +295,7 @@ export function NavbarClient() {
                   </motion.div>
                 ))}
 
-                {!session && (
+                {mounted && !session && (
                   <motion.div variants={mobileItemVariants} className="pt-2 border-t border-white/5 flex gap-2">
                     <Link href="/auth" className="flex-1" onClick={() => setMobileOpen(false)}>
                       <button className="w-full py-2.5 btn-ghost text-sm font-semibold rounded-xl">Sign In</button>
