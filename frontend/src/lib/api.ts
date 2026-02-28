@@ -24,7 +24,7 @@ export const api = {
             const metadata = snapshot.val();
 
             // 3. (Optional) Sync to MongoDB as a backup and get Tagline
-            let tagline = "PendingTagline";
+            let tagline = metadata.tagline || "PendingTagline";
             try {
                 const res = await fetch(`${API_BASE_URL}/auth/sync`, {
                     method: 'POST',
@@ -33,7 +33,13 @@ export const api = {
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.tagline) tagline = data.tagline;
+                    if (data.tagline) {
+                        tagline = data.tagline;
+                        // Cache the tagline in RTDB if it was missing or updated
+                        if (metadata.tagline !== tagline) {
+                            set(ref(database, `users/${user.uid}/crypto/tagline`), tagline).catch(console.error);
+                        }
+                    }
                 }
             } catch (e) {
                 console.warn("MongoDB sync failed on login, but proceeding with Firebase auth", e);
@@ -67,6 +73,11 @@ export const api = {
             // 3. Sync full profile to MongoDB Backend and get Tagline
             const syncData = await api.auth.syncMongoBackup(token, { ...payload, email: payload.email });
 
+            // 4. Cache tagline in RTDB to prevent "PendingTagline" if MongoDB fails in the future
+            if (syncData.tagline) {
+                await set(ref(database, `users/${user.uid}/crypto/tagline`), syncData.tagline);
+            }
+
             return { userId: user.uid, token, tagline: syncData.tagline };
         },
 
@@ -95,10 +106,14 @@ export const api = {
                 await set(ref(database, `users/${user.uid}/crypto`), metadata);
                 const syncData = await api.auth.syncMongoBackup(token, { ...payload, email: user.email || undefined });
                 metadata.tagline = syncData.tagline;
+
+                if (syncData.tagline) {
+                    await set(ref(database, `users/${user.uid}/crypto/tagline`), syncData.tagline);
+                }
             } else {
                 // Existing Google Login -> fetch keys
                 metadata = snapshot.val();
-                metadata.tagline = "PendingTagline";
+                let tagline = metadata.tagline || "PendingTagline";
                 try {
                     const res = await fetch(`${API_BASE_URL}/auth/sync`, {
                         method: 'POST',
@@ -107,11 +122,17 @@ export const api = {
                     });
                     if (res.ok) {
                         const data = await res.json();
-                        if (data.tagline) metadata.tagline = data.tagline;
+                        if (data.tagline) {
+                            tagline = data.tagline;
+                            if (metadata.tagline !== tagline) {
+                                set(ref(database, `users/${user.uid}/crypto/tagline`), tagline).catch(console.error);
+                            }
+                        }
                     }
                 } catch (e) {
                     console.warn("MongoDB sync failed on Google login", e);
                 }
+                metadata.tagline = tagline;
             }
 
             return {
