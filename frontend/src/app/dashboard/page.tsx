@@ -11,7 +11,7 @@ import {
   UploadCloud, Plus, ChevronRight, LogOut, Loader2, MessageSquare,
   Settings, User, Activity, Search, Grid3x3, List, Lock,
   FileText, Image, Video, Archive, ChevronLeft, Home,
-  FolderOpen, RefreshCw
+  FolderOpen, RefreshCw, Share2
 } from "lucide-react";
 
 /* ── Helpers ────────────────────────────────────────────────── */
@@ -186,11 +186,11 @@ export default function Dashboard() {
               <div className="glass rounded-2xl p-3.5 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl identicon-placeholder flex items-center justify-center flex-shrink-0">
                   <span className="font-code font-bold text-accent-300 text-sm">
-                    {session.email[0].toUpperCase()}
+                    {(session.tagline || session.email)[0].toUpperCase()}
                   </span>
                 </div>
                 <div className="overflow-hidden">
-                  <p className="text-sm font-semibold text-primary-100 truncate">{session.email}</p>
+                  <p className="text-sm font-semibold text-primary-100 truncate">{session.tagline || session.email}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full status-online animate-pulse-glow" />
                     <span className="text-[10px] text-primary-100/38 font-code">Vault Active</span>
@@ -450,6 +450,9 @@ export default function Dashboard() {
                             {file.storageLevel === "warm" && <span className="badge-warm text-[9px] px-1.5 py-0.5 rounded-full">WARM</span>}
                             {file.storageLevel === "cold" && <span className="badge-cold text-[9px] px-1.5 py-0.5 rounded-full">COLD</span>}
                           </div>
+                          <Link href="/vault-sharing" className="absolute bottom-2.5 right-2.5 p-1.5 rounded-lg hover:bg-white/10 text-primary-100/30 hover:text-accent-400 transition-colors z-20" onClick={(e) => e.stopPropagation()}>
+                            <Share2 className="w-3.5 h-3.5" />
+                          </Link>
                         </motion.div>
                       ))}
                     </div>
@@ -483,7 +486,10 @@ export default function Dashboard() {
                           {file.storageLevel === "hot" && <span className="badge-hot  text-[9px] px-1.5 py-0.5 rounded-full hidden sm:block">HOT</span>}
                           {file.storageLevel === "warm" && <span className="badge-warm text-[9px] px-1.5 py-0.5 rounded-full hidden sm:block">WARM</span>}
                           {file.storageLevel === "cold" && <span className="badge-cold text-[9px] px-1.5 py-0.5 rounded-full hidden sm:block">COLD</span>}
-                          <Lock className="w-3 h-3 enc-locked flex-shrink-0" />
+                          <Lock className="w-3 h-3 enc-locked flex-shrink-0 mx-2" />
+                          <Link href="/vault-sharing" className="p-1.5 rounded-lg hover:bg-white/10 text-primary-100/30 hover:text-accent-400 transition-colors flex-shrink-0 z-20" onClick={(e) => e.stopPropagation()}>
+                            <Share2 className="w-4 h-4" />
+                          </Link>
                         </motion.div>
                       ))}
                     </div>

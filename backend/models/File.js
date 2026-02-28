@@ -32,6 +32,14 @@ const fileSchema = new mongoose.Schema({
         type: String,
         required: true // The ID pointing to the actual encrypted/compressed blob in GridFS or Object Storage
     },
+    sharedWith: [{
+        tagline: String, // The recipient's user tagline
+        encryptedKey: String, // The file's AES key wrapped with the recipient's public key
+        sharedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     createdAt: {
         type: Date,
         default: Date.now

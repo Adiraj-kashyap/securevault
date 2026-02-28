@@ -71,3 +71,60 @@ exports.getStorageStats = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch storage statistics' });
     }
 };
+
+// Share a file with a recipient
+exports.shareFile = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { fileId } = req.params;
+        const { recipientTagline, wrappedKey } = req.body;
+
+        const file = await File.findOne({ _id: fileId, owner: userId });
+        if (!file) return res.status(404).json({ error: 'File not found or not owned by you' });
+
+        const User = require('../models/User');
+        const recipient = await User.findOne({ tagline: recipientTagline });
+        if (!recipient) return res.status(404).json({ error: 'Recipient tagline not found' });
+
+        // Add to sharedWith array
+        file.sharedWith.push({
+            tagline: recipientTagline,
+            encryptedKey: wrappedKey
+        });
+
+        await file.save();
+        res.json({ message: 'File shared securely', file });
+    } catch (error) {
+        console.error('File Share Error:', error);
+        res.status(500).json({ error: 'Failed to share file' });
+    }
+};
+
+// Get files shared with the user
+exports.getSharedFiles = async (req, res) => {
+    try {
+        const User = require('../models/User');
+        const user = await User.findOne({ uid: req.user.userId });
+        if (!user || !user.tagline) return res.status(400).json({ error: 'User tagline not defined' });
+
+        const sharedFiles = await File.find({ 'sharedWith.tagline': user.tagline }).sort({ createdAt: -1 });
+
+        // Format for response
+        const formatted = sharedFiles.map(f => {
+            const shareData = f.sharedWith.find(s => s.tagline === user.tagline);
+            return {
+                _id: f._id,
+                filename: f.filename,
+                owner: f.owner,
+                size: f.size,
+                encryptedKey: shareData.encryptedKey,
+                sharedAt: shareData.sharedAt
+            };
+        });
+
+        res.json(formatted);
+    } catch (error) {
+        console.error('Fetch Shared Files Error:', error);
+        res.status(500).json({ error: 'Failed to fetch shared files' });
+    }
+};

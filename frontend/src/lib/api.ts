@@ -12,24 +12,29 @@ export const api = {
             const userCredential = await signInWithEmailAndPassword(auth, payload.email, payload.passwordHash);
             const user = userCredential.user;
             const token = await user.getIdToken();
-            
+
             // 2. Fetch User Crypto Metadata from Firebase RTDB
             const dbRef = ref(database, `users/${user.uid}/crypto`);
             const snapshot = await get(dbRef);
-            
+
             if (!snapshot.exists()) {
                 throw new Error("User metadata not found in Realtime Database.");
             }
-            
+
             const metadata = snapshot.val();
-            
-            // 3. (Optional) Sync to MongoDB as a backup
+
+            // 3. (Optional) Sync to MongoDB as a backup and get Tagline
+            let tagline = "PendingTagline";
             try {
-                await fetch(`${API_BASE_URL}/auth/sync`, {
+                const res = await fetch(`${API_BASE_URL}/auth/sync`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ email: payload.email, passwordHash: payload.passwordHash })
                 });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.tagline) tagline = data.tagline;
+                }
             } catch (e) {
                 console.warn("MongoDB sync failed on login, but proceeding with Firebase auth", e);
             }
@@ -37,38 +42,39 @@ export const api = {
             return {
                 userId: user.uid,
                 token,
+                tagline,
                 salt: metadata.salt,
                 encryptedPrivateKey: metadata.encryptedPrivateKey,
                 publicKey: metadata.publicKey
             };
         },
-        
+
         register: async (payload: { email: string; passwordHash: string; publicKey: string; encryptedPrivateKey: string; salt: string }) => {
             // 1. Create user in Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, payload.email, payload.passwordHash);
             const user = userCredential.user;
             const token = await user.getIdToken();
-            
+
             const metadata = {
                 publicKey: payload.publicKey,
                 encryptedPrivateKey: payload.encryptedPrivateKey,
                 salt: payload.salt
             };
-            
+
             // 2. Store Crypto Metadata in Firebase RTDB
             await set(ref(database, `users/${user.uid}/crypto`), metadata);
-            
-            // 3. Sync full profile to MongoDB Backend
-            await api.auth.syncMongoBackup(token, { ...payload });
-            
-            return { userId: user.uid, token };
+
+            // 3. Sync full profile to MongoDB Backend and get Tagline
+            const syncData = await api.auth.syncMongoBackup(token, { ...payload, email: payload.email });
+
+            return { userId: user.uid, token, tagline: syncData.tagline };
         },
 
         googleLogin: async (payload: { passwordHash: string; publicKey: string; encryptedPrivateKey: string; salt: string }) => {
             // Lazy load required Firebase deps
             const { signInWithPopup } = await import('firebase/auth');
             const { googleProvider } = await import('./firebase');
-            
+
             const userCredential = await signInWithPopup(auth, googleProvider);
             const user = userCredential.user;
             const token = await user.getIdToken();
@@ -76,9 +82,9 @@ export const api = {
             // Check if crypto metadata exists already
             const dbRef = ref(database, `users/${user.uid}/crypto`);
             const snapshot = await get(dbRef);
-            
-            let metadata;
-            
+
+            let metadata: any;
+
             if (!snapshot.exists()) {
                 // First time Google Login -> register keys
                 metadata = {
@@ -87,16 +93,22 @@ export const api = {
                     salt: payload.salt
                 };
                 await set(ref(database, `users/${user.uid}/crypto`), metadata);
-                await api.auth.syncMongoBackup(token, { ...payload });
+                const syncData = await api.auth.syncMongoBackup(token, { ...payload, email: user.email || undefined });
+                metadata.tagline = syncData.tagline;
             } else {
                 // Existing Google Login -> fetch keys
                 metadata = snapshot.val();
+                metadata.tagline = "PendingTagline";
                 try {
-                    await fetch(`${API_BASE_URL}/auth/sync`, {
+                    const res = await fetch(`${API_BASE_URL}/auth/sync`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                         body: JSON.stringify({ email: user.email, passwordHash: payload.passwordHash })
                     });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.tagline) metadata.tagline = data.tagline;
+                    }
                 } catch (e) {
                     console.warn("MongoDB sync failed on Google login", e);
                 }
@@ -105,13 +117,14 @@ export const api = {
             return {
                 userId: user.uid,
                 token,
+                tagline: metadata.tagline,
                 salt: metadata.salt,
                 encryptedPrivateKey: metadata.encryptedPrivateKey,
                 publicKey: metadata.publicKey
             };
         },
 
-        syncMongoBackup: async (token: string, payload: { passwordHash: string; publicKey: string; encryptedPrivateKey: string; salt: string }) => {
+        syncMongoBackup: async (token: string, payload: { passwordHash: string; publicKey: string; encryptedPrivateKey: string; salt: string; email?: string }) => {
             const res = await fetch(`${API_BASE_URL}/auth/sync`, {
                 method: 'POST',
                 headers: {
@@ -167,6 +180,57 @@ export const api = {
                     'Authorization': `Bearer ${token}`
                 },
                 body: formData
+            });
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+        },
+        shareFile: async (token: string, fileId: string, payload: { recipientTagline: string; wrappedKey: string }) => {
+            const res = await fetch(`${API_BASE_URL}/storage/file/${fileId}/share`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+        },
+        getSharedFiles: async (token: string) => {
+            const res = await fetch(`${API_BASE_URL}/storage/shared-with-me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+        }
+    },
+
+    // Internal Secure Mail Endpoints
+    mail: {
+        send: async (token: string, payload: { receiverTagline: string; encryptedSubject: string; encryptedBody: string; attachments?: any[] }) => {
+            const res = await fetch(`${API_BASE_URL}/mail/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+        },
+        getInbox: async (token: string) => {
+            const res = await fetch(`${API_BASE_URL}/mail/inbox`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+        },
+        getSent: async (token: string) => {
+            const res = await fetch(`${API_BASE_URL}/mail/sent`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+        },
+        markRead: async (token: string, mailId: string) => {
+            const res = await fetch(`${API_BASE_URL}/mail/${mailId}/read`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) throw new Error(await res.text());
             return res.json();

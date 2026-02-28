@@ -14,5 +14,7 @@ router.get('/directory/:folderId', storageController.getDirectory); // Specific 
 
 // Vault Management
 router.post('/folder', storageController.createFolder);
+router.post('/file/:fileId/share', storageController.shareFile);
+router.get('/shared-with-me', storageController.getSharedFiles);
 
 module.exports = router;
