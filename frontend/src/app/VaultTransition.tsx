@@ -19,10 +19,11 @@
 
 import {
     createContext, useContext, useRef, useState, useCallback,
-    useEffect, ReactNode,
+    useEffect, ReactNode, useMemo
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useAppearance } from "./AppearanceContext";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface Origin { x: number; y: number }
@@ -199,9 +200,131 @@ function IrisOverlay({
     );
 }
 
+/* ─── Shatter Overlay ────────────────────────────────────────── */
+function ShatterOverlay({ phase }: { phase: "closing" | "open" | "opening" }) {
+    const COLS = 8, ROWS = 6;
+    const tiles = Array.from({ length: COLS * ROWS }, (_, i) => i);
+    const isClosing = phase === "closing";
+    const isOpen = phase === "open";
+
+    return (
+        <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.3, delay: 0.4 } }}
+            className="fixed inset-0 pointer-events-none"
+            style={{ zIndex: 9999 }}
+        >
+            <div className="grid absolute inset-0" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)`, gridTemplateRows: `repeat(${ROWS}, 1fr)` }}>
+                {tiles.map((i) => {
+                    const col = i % COLS;
+                    const row = Math.floor(i / COLS);
+                    const cx = col / COLS - 0.5, cy = row / ROWS - 0.5;
+                    const dist = Math.sqrt(cx * cx + cy * cy);
+                    const angle = Math.atan2(cy, cx);
+                    const scatter = 180 + dist * 300;
+
+                    return (
+                        <motion.div
+                            key={i}
+                            initial={isClosing
+                                ? { opacity: 0, x: 0, y: 0, rotate: 0, scale: 1 }
+                                : { opacity: 1, x: Math.cos(angle) * scatter, y: Math.sin(angle) * scatter, rotate: (i % 7 - 3) * 25, scale: 0.3 }
+                            }
+                            animate={isOpen
+                                ? { opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }
+                                : { opacity: isClosing ? 1 : 0, x: isClosing ? Math.cos(angle) * scatter : 0, y: isClosing ? Math.sin(angle) * scatter : 0, rotate: isClosing ? (i % 7 - 3) * 25 : 0, scale: isClosing ? 0.3 : 1 }
+                            }
+                            transition={{
+                                duration: isClosing ? 0.4 : 0.45,
+                                delay: isClosing ? dist * 0.15 : (1 - dist) * 0.12,
+                                ease: isClosing ? [0.36, 0, 0.66, -0.05] : [0.34, 1.56, 0.64, 1],
+                            }}
+                            style={{
+                                background: `rgba(6, 6, 10, 0.97)`,
+                                border: `1px solid rgba(var(--theme-glow-rgb), 0.15)`,
+                                boxShadow: isOpen ? `inset 0 0 8px rgba(var(--theme-glow-rgb), 0.08)` : `0 0 20px rgba(var(--theme-glow-rgb), 0.3)`,
+                            }}
+                        />
+                    );
+                })}
+            </div>
+        </motion.div>
+    );
+}
+
+/* ─── Portal Overlay ─────────────────────────────────────────── */
+function PortalOverlay({ phase, origin }: { phase: "closing" | "open" | "opening"; origin: Origin }) {
+    const isClosing = phase === "closing";
+    const isOpen = phase === "open";
+    const RINGS = 6;
+
+    return (
+        <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.25 } }}
+            className="fixed inset-0 pointer-events-none overflow-hidden"
+            style={{ zIndex: 9999 }}
+        >
+            {/* Dark fill */}
+            <motion.div
+                className="absolute inset-0"
+                style={{ background: "radial-gradient(circle at 50% 50%, rgba(6,6,10,0.98) 0%, rgba(2,2,5,1) 100%)" }}
+                initial={{ opacity: isClosing ? 0 : 1 }}
+                animate={{ opacity: isOpen ? 1 : isClosing ? 1 : 0 }}
+                transition={{ duration: isClosing ? 0.4 : 0.5 }}
+            />
+            {/* Swirling rings */}
+            {Array.from({ length: RINGS }, (_, i) => {
+                const scale = isClosing ? (i + 1) / RINGS : (RINGS - i) / RINGS;
+                return (
+                    <motion.div
+                        key={i}
+                        className="absolute rounded-full border"
+                        style={{
+                            width: `${(i + 1) * 120}px`,
+                            height: `${(i + 1) * 120}px`,
+                            left: origin.x,
+                            top: origin.y,
+                            marginLeft: `-${(i + 1) * 60}px`,
+                            marginTop: `-${(i + 1) * 60}px`,
+                            borderColor: `rgba(var(--theme-glow-rgb), ${0.6 - i * 0.08})`,
+                            boxShadow: `0 0 ${20 - i * 2}px rgba(var(--theme-glow-rgb), ${0.5 - i * 0.06})`,
+                        }}
+                        initial={{ scale: 0, rotate: 0, opacity: 0 }}
+                        animate={{
+                            scale: isClosing ? [0, 1.2, 1] : isOpen ? 1 : [1, 0],
+                            rotate: isClosing ? [0, 180 + i * 30] : isOpen ? 180 + i * 30 : [180 + i * 30, 360 + i * 30],
+                            opacity: isOpen ? 1 : isClosing ? [0, 1] : [1, 0],
+                        }}
+                        transition={{
+                            duration: isClosing ? 0.5 : 0.4,
+                            delay: i * 0.06,
+                            ease: "easeInOut",
+                        }}
+                    />
+                );
+            })}
+            {/* Center vortex glow */}
+            <motion.div
+                className="absolute rounded-full"
+                style={{
+                    width: "200px", height: "200px",
+                    left: origin.x - 100, top: origin.y - 100,
+                    background: `radial-gradient(circle, rgba(var(--theme-glow-rgb), 0.4) 0%, transparent 70%)`,
+                    filter: "blur(20px)",
+                }}
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: isOpen ? 1 : isClosing ? [0, 1] : 0, scale: isOpen ? 1 : isClosing ? [0, 1.5] : 0 }}
+                transition={{ duration: 0.4 }}
+            />
+        </motion.div>
+    );
+}
+
 /* ─── Provider ───────────────────────────────────────────────── */
 export function VaultTransitionProvider({ children }: { children: ReactNode }) {
     const router = useRouter();
+    const { transitionStyle, pageTransition } = useAppearance();
     const [phase, setPhase] = useState<"idle" | "closing" | "open" | "opening">("idle");
     const [origin, setOrigin] = useState<Origin>({ x: 720, y: 400 });
     const pendingHref = useRef<string>("");
@@ -212,8 +335,13 @@ export function VaultTransitionProvider({ children }: { children: ReactNode }) {
         const oy = org?.y ?? (typeof window !== "undefined" ? window.innerHeight / 2 : 400);
         setOrigin({ x: ox, y: oy });
         pendingHref.current = href;
+        if (!pageTransition) {
+            // No animation — just navigate
+            router.push(href);
+            return;
+        }
         setPhase("closing");
-    }, [phase]);
+    }, [phase, pageTransition, router]);
 
     useEffect(() => {
         if (phase === "closing") {
@@ -237,8 +365,14 @@ export function VaultTransitionProvider({ children }: { children: ReactNode }) {
         <Ctx.Provider value={{ navigate }}>
             {children}
             <AnimatePresence>
-                {phase !== "idle" && (
+                {phase !== "idle" && transitionStyle === "iris" && (
                     <IrisOverlay key="iris" phase={phase as any} origin={origin} />
+                )}
+                {phase !== "idle" && transitionStyle === "shatter" && (
+                    <ShatterOverlay key="shatter" phase={phase as any} />
+                )}
+                {phase !== "idle" && transitionStyle === "portal" && (
+                    <PortalOverlay key="portal" phase={phase as any} origin={origin} />
                 )}
             </AnimatePresence>
         </Ctx.Provider>
