@@ -53,64 +53,64 @@ function RainColumn({ x, delay }: { x: number; delay: number }) {
 /* ─── Scramble Text ───────────────────────────────────────────── */
 function ScrambleText({ text, startDelay }: { text: string; startDelay: number }) {
     const [displayChars, setDisplayChars] = useState<string[]>(
-        Array(text.length).fill(" ")
+        () => text.split("").map(() => " ")
     );
-    const [revealed, setRevealed] = useState(0);
 
     useEffect(() => {
-        const startTimeout = setTimeout(() => {
-            let charIdx = 0;
-            const interval = setInterval(() => {
-                if (charIdx >= text.length) { clearInterval(interval); return; }
+        let cancelled = false;
+        const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
-                let scrambleCount = 0;
-                const scrambleInterval = setInterval(() => {
-                    setDisplayChars(prev => {
-                        const next = [...prev];
-                        // Scramble unrevealed chars ahead of current
-                        for (let i = charIdx; i < Math.min(charIdx + 3, text.length); i++) {
-                            next[i] = text[i] === " " ? " " : HEX_CHARS[rand(16)];
-                        }
-                        return next;
-                    });
-                    scrambleCount++;
-                    if (scrambleCount >= 5) {
-                        clearInterval(scrambleInterval);
-                        setDisplayChars(prev => {
-                            const next = [...prev];
-                            next[charIdx] = text[charIdx];
-                            return next;
-                        });
-                        setRevealed(charIdx + 1);
-                        charIdx++;
-                    }
-                }, 38);
-            }, 60);
+        async function run() {
+            await sleep(startDelay);
+            for (let i = 0; i < text.length; i++) {
+                if (cancelled) return;
 
-            return () => clearInterval(interval);
-        }, startDelay);
+                if (text[i] === " ") {
+                    setDisplayChars(prev => { const n = [...prev]; n[i] = " "; return n; });
+                    continue;
+                }
 
-        return () => clearTimeout(startTimeout);
+                // Scramble this position 6 times before locking
+                for (let s = 0; s < 6; s++) {
+                    if (cancelled) return;
+                    const scrambled = HEX_CHARS[rand(16)];
+                    setDisplayChars(prev => { const n = [...prev]; n[i] = scrambled; return n; });
+                    await sleep(32);
+                }
+
+                // Lock the correct character
+                if (!cancelled) {
+                    setDisplayChars(prev => { const n = [...prev]; n[i] = text[i]; return n; });
+                    await sleep(38);
+                }
+            }
+        }
+
+        run();
+        return () => { cancelled = true; };
     }, [text, startDelay]);
 
     return (
         <span className="font-code tracking-[0.2em]">
-            {displayChars.map((ch, i) => (
-                <motion.span
-                    key={i}
-                    animate={{
-                        color: i < revealed
-                            ? "rgba(var(--theme-glow-rgb), 1)"
-                            : "rgba(var(--theme-glow-rgb), 0.4)",
-                        textShadow: i < revealed
-                            ? "0 0 12px rgba(var(--theme-glow-rgb), 0.9)"
-                            : "none",
-                    }}
-                    transition={{ duration: 0.1 }}
-                >
-                    {ch}
-                </motion.span>
-            ))}
+            {displayChars.map((ch, i) => {
+                const locked = ch === text[i] && text[i] !== " ";
+                return (
+                    <motion.span
+                        key={i}
+                        animate={{
+                            color: locked
+                                ? "rgba(var(--theme-glow-rgb), 1)"
+                                : "rgba(var(--theme-glow-rgb), 0.4)",
+                            textShadow: locked
+                                ? "0 0 12px rgba(var(--theme-glow-rgb), 0.9)"
+                                : "none",
+                        }}
+                        transition={{ duration: 0.08 }}
+                    >
+                        {ch}
+                    </motion.span>
+                );
+            })}
         </span>
     );
 }
