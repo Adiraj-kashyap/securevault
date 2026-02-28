@@ -17,6 +17,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAppearance } from "./AppearanceContext";
 
 /* ─── Random hex char helpers ─────────────────────────────────── */
 const HEX_CHARS = "0123456789ABCDEF";
@@ -222,8 +223,8 @@ function BurstLines({ show }: { show: boolean }) {
     );
 }
 
-/* ─── Main Component ──────────────────────────────────────────── */
-export function AuthSuccessAnimation({
+/* ─── Main Component — Handshake (original) ───────────────────── */
+function HandshakeAnimation({
     email,
     isLogin,
     onComplete,
@@ -373,3 +374,182 @@ export function AuthSuccessAnimation({
         </motion.div>
     );
 }
+
+/* ─── Decrypt Animation ───────────────────────────────────────── */
+const MATRIX_CHARS = "アイウエオカキクケコ01アBCDEF#@!%&";
+function DecryptAnimation({ email, isLogin, onComplete }: { email: string; isLogin: boolean; onComplete: () => void }) {
+    const [progress, setProgress] = useState(0);
+    const [done, setDone] = useState(false);
+    const called = useRef(false);
+
+    useEffect(() => {
+        let p = 0;
+        const interval = setInterval(() => {
+            p += 2;
+            setProgress(p);
+            if (p >= 100) {
+                clearInterval(interval);
+                setDone(true);
+                setTimeout(() => {
+                    if (!called.current) { called.current = true; onComplete(); }
+                }, 800);
+            }
+        }, 28);
+        return () => clearInterval(interval);
+    }, [onComplete]);
+
+    const rows = 20, cols = 40;
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center overflow-hidden"
+            style={{ zIndex: 9998, background: "#03060a" }}
+        >
+            {/* Matrix decode grid */}
+            <div className="absolute inset-0 font-mono text-[11px] leading-[1.4] overflow-hidden select-none"
+                style={{ color: "rgba(var(--theme-glow-rgb), 0.15)" }}>
+                {Array.from({ length: rows }, (_, r) => (
+                    <div key={r} className="flex">
+                        {Array.from({ length: cols }, (_, c) => {
+                            const cellProgress = (r / rows) * 100;
+                            const isDecoded = progress > cellProgress;
+                            return (
+                                <span key={c} style={{
+                                    color: isDecoded
+                                        ? `rgba(var(--theme-glow-rgb), ${0.05 + Math.random() * 0.05})`
+                                        : `rgba(var(--theme-glow-rgb), ${0.3 + Math.random() * 0.4})`,
+                                    transition: "color 0.2s",
+                                    width: "14px",
+                                    display: "inline-block",
+                                }}>
+                                    {isDecoded ? "·" : MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)]}
+                                </span>
+                            );
+                        })}
+                    </div>
+                ))}
+            </div>
+
+            {/* Scan line */}
+            <motion.div
+                className="absolute left-0 right-0 h-[2px] pointer-events-none"
+                style={{
+                    top: `${progress}%`,
+                    background: `linear-gradient(90deg, transparent, rgba(var(--theme-glow-rgb),0.9), transparent)`,
+                    boxShadow: `0 0 20px rgba(var(--theme-glow-rgb),0.6)`,
+                }}
+            />
+
+            {/* Center label */}
+            <div className="relative z-10 text-center">
+                <AnimatePresence>
+                    {done && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ type: "spring", stiffness: 200 }}
+                            className="font-display font-bold text-3xl"
+                            style={{ color: "rgba(var(--theme-glow-rgb), 1)", textShadow: "0 0 30px rgba(var(--theme-glow-rgb),0.8)" }}
+                        >
+                            {isLogin ? "DECRYPTED" : "ENCRYPTED"}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                <div className="text-xs font-code mt-2" style={{ color: "rgba(var(--theme-glow-rgb),0.4)" }}>
+                    {Math.min(100, Math.round(progress))}% DECODED
+                </div>
+            </div>
+        </motion.div>
+    );
+}
+
+/* ─── Assemble Animation ──────────────────────────────────────── */
+function AssembleAnimation({ email, isLogin, onComplete }: { email: string; isLogin: boolean; onComplete: () => void }) {
+    const called = useRef(false);
+    const PIECES = [
+        { label: "RSA-2048", from: { x: -300, y: -200 }, delay: 0 },
+        { label: "AES-256", from: { x: 300, y: -200 }, delay: 0.08 },
+        { label: "PBKDF2", from: { x: -300, y: 200 }, delay: 0.16 },
+        { label: "SHA-256", from: { x: 300, y: 200 }, delay: 0.24 },
+        { label: isLogin ? "ACCESS" : "VAULT", from: { x: 0, y: -400 }, delay: 0.1 },
+        { label: isLogin ? "GRANTED" : "CREATED", from: { x: 0, y: 400 }, delay: 0.2 },
+    ];
+
+    useEffect(() => {
+        const t = setTimeout(() => {
+            if (!called.current) { called.current = true; onComplete(); }
+        }, 2400);
+        return () => clearTimeout(t);
+    }, [onComplete]);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center"
+            style={{ zIndex: 9998, background: "#06060a" }}
+        >
+            {/* Ambient glow */}
+            <div className="absolute inset-0 pointer-events-none"
+                style={{ background: "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(var(--theme-glow-rgb),0.06), transparent)" }} />
+
+            <div className="relative z-10 flex flex-col items-center gap-4">
+                {/* Flying pieces that assemble */}
+                <div className="relative w-64 h-40 flex items-center justify-center">
+                    {PIECES.map((p, i) => (
+                        <motion.div
+                            key={i}
+                            initial={{ x: p.from.x, y: p.from.y, opacity: 0, scale: 0.3 }}
+                            animate={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                            transition={{ type: "spring", stiffness: 120, damping: 14, delay: p.delay }}
+                            className="absolute font-display font-extrabold text-sm tracking-widest"
+                            style={{
+                                color: `rgba(var(--theme-glow-rgb), ${0.5 + i * 0.08})`,
+                                textShadow: `0 0 20px rgba(var(--theme-glow-rgb), 0.4)`,
+                            }}
+                        >
+                            {p.label}
+                        </motion.div>
+                    ))}
+                </div>
+
+                <motion.div
+                    initial={{ scaleX: 0, opacity: 0 }}
+                    animate={{ scaleX: 1, opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.8 }}
+                    className="w-32 h-px origin-center"
+                    style={{ background: `rgba(var(--theme-glow-rgb), 0.6)`, boxShadow: `0 0 10px rgba(var(--theme-glow-rgb), 0.5)` }}
+                />
+                <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.9 }}
+                    className="text-[10px] font-code tracking-widest"
+                    style={{ color: "rgba(var(--theme-glow-rgb),0.4)" }}
+                >
+                    {email.toUpperCase()}
+                </motion.p>
+            </div>
+        </motion.div>
+    );
+}
+
+/* ─── Router — picks the right style from AppearanceContext ───── */
+export function AuthSuccessAnimation({
+    email,
+    isLogin,
+    onComplete,
+}: {
+    email: string;
+    isLogin: boolean;
+    onComplete: () => void;
+}) {
+    const { successStyle } = useAppearance();
+    if (successStyle === "decrypt") return <DecryptAnimation email={email} isLogin={isLogin} onComplete={onComplete} />;
+    if (successStyle === "assemble") return <AssembleAnimation email={email} isLogin={isLogin} onComplete={onComplete} />;
+    return <HandshakeAnimation email={email} isLogin={isLogin} onComplete={onComplete} />;
+}
+
