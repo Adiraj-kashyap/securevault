@@ -6,6 +6,7 @@ import { useSession } from "./SessionContext";
 import { ThemeSelector } from "./ThemeSelector";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import { TransitionLink } from "./VaultTransition";
 import {
   Shield, LayoutDashboard, MessageSquareLock, Settings,
   LogOut, User, ChevronDown, X, Menu, Lock, Activity,
@@ -89,8 +90,8 @@ export function NavbarClient() {
                     <motion.div
                       whileHover={{ backgroundColor: "rgba(255,255,255,0.06)" }}
                       className={`relative flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${active
-                          ? "text-accent-300"
-                          : "text-primary-100/60 hover:text-primary-100"
+                        ? "text-accent-300"
+                        : "text-primary-100/60 hover:text-primary-100"
                         }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -113,8 +114,8 @@ export function NavbarClient() {
                     <motion.div
                       whileHover={{ backgroundColor: "rgba(255,255,255,0.06)" }}
                       className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-colors ${active
-                          ? "text-accent-300"
-                          : "text-primary-100/60 hover:text-primary-100"
+                        ? "text-accent-300"
+                        : "text-primary-100/60 hover:text-primary-100"
                         }`}
                     >
                       {label}
@@ -217,7 +218,7 @@ export function NavbarClient() {
               </div>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
-                <Link href="/auth">
+                <TransitionLink href="/auth">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.97 }}
@@ -225,8 +226,8 @@ export function NavbarClient() {
                   >
                     Sign In
                   </motion.button>
-                </Link>
-                <Link href="/auth?mode=register">
+                </TransitionLink>
+                <TransitionLink href="/auth?mode=register">
                   <motion.button
                     whileHover={{ scale: 1.04, y: -1 }}
                     whileTap={{ scale: 0.97 }}
@@ -234,7 +235,7 @@ export function NavbarClient() {
                   >
                     Get Started
                   </motion.button>
-                </Link>
+                </TransitionLink>
               </div>
             )}
 
@@ -276,8 +277,8 @@ export function NavbarClient() {
                       href={link.href}
                       onClick={() => setMobileOpen(false)}
                       className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all ${isActive(link.href)
-                          ? "bg-accent-900/30 text-accent-300 border border-accent-800/30"
-                          : "text-primary-100/60 hover:text-primary-100 hover:bg-white/5"
+                        ? "bg-accent-900/30 text-accent-300 border border-accent-800/30"
+                        : "text-primary-100/60 hover:text-primary-100 hover:bg-white/5"
                         }`}
                     >
                       {link.label}

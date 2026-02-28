@@ -11,6 +11,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { cryptoUtils } from "@/lib/crypto";
 import { useSession } from "../SessionContext";
+import { AuthSuccessAnimation } from "../AuthSuccessAnimation";
+import { AnimatePresence as AP } from "framer-motion";
 
 /* ── Password Strength ─────────────────────────────────────── */
 function getPasswordStrength(pw: string): { score: number; label: string; color: string } {
@@ -96,7 +98,7 @@ function KeyGenAnimation() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.15 }}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${active ? "bg-accent-900/30 border border-accent-800/40" :
-                  done ? "opacity-50" : "opacity-30"
+                done ? "opacity-50" : "opacity-30"
                 }`}
             >
               {done ? (
@@ -168,6 +170,7 @@ function AuthForm() {
   const [generatingKeys, setGenerating] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showSuccess, setShowSuccess] = useState<{ email: string; isLogin: boolean } | null>(null);
 
   const strength = getPasswordStrength(password);
 
@@ -184,7 +187,8 @@ function AuthForm() {
         const privateKey = await cryptoUtils.decryptPrivateKey(res.encryptedPrivateKey, derivedKey);
         if (!privateKey) throw new Error("Invalid Master Password. Decryption failed.");
         setSession({ userId: res.userId, email, token: res.token, derivedAesKey: derivedKey, decryptedPrivateKey: privateKey, publicKey: res.publicKey });
-        router.push("/dashboard");
+        setLoading(false);
+        setShowSuccess({ email, isLogin: true });
       } else {
         setLoading(false);
         setGenerating(true);
@@ -195,8 +199,8 @@ function AuthForm() {
         setGenerating(false);
         setLoading(true);
         await api.auth.register({ email, passwordHash: password, publicKey, encryptedPrivateKey: encryptedPrivKey, salt });
-        setSuccess("Vault created! Redirecting to login...");
-        setTimeout(() => setIsLogin(true), 2000);
+        setLoading(false);
+        setShowSuccess({ email, isLogin: false });
       }
     } catch (err) {
       setError((err as Error).message || "Authentication failed.");
@@ -207,6 +211,25 @@ function AuthForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-16 relative">
+      {/* Cinematic success ceremony overlay */}
+      <AP>
+        {showSuccess && (
+          <AuthSuccessAnimation
+            key="success"
+            email={showSuccess.email}
+            isLogin={showSuccess.isLogin}
+            onComplete={() => {
+              if (showSuccess.isLogin) {
+                router.push("/dashboard");
+              } else {
+                setShowSuccess(null);
+                setIsLogin(true);
+              }
+            }}
+          />
+        )}
+      </AP>
+
       <AuthBackground />
 
       <div className="relative z-10 w-full max-w-md">
@@ -306,8 +329,8 @@ function AuthForm() {
                 key={label}
                 onClick={() => { setIsLogin(i === 0); setError(""); setSuccess(""); }}
                 className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${(isLogin ? i === 0 : i === 1)
-                    ? "bg-accent-500 text-primary-900 shadow-md shadow-black/20"
-                    : "text-primary-100/45 hover:text-primary-100"
+                  ? "bg-accent-500 text-primary-900 shadow-md shadow-black/20"
+                  : "text-primary-100/45 hover:text-primary-100"
                   }`}
               >
                 {label}

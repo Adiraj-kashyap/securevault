@@ -9,6 +9,7 @@ import {
   CheckCircle, Activity, Layers, Users, Terminal, Cpu,
   Database, Code2, Fingerprint, RefreshCw
 } from "lucide-react";
+import { TransitionLink } from "./VaultTransition";
 
 /* ── Animation Variants ─────────────────────────────────────── */
 const container: any = {
@@ -399,7 +400,7 @@ export default function Home() {
 
             {/* CTA Row */}
             <motion.div variants={item} className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-              <Link href="/auth?mode=register">
+              <TransitionLink href="/auth?mode=register">
                 <motion.button
                   whileHover={{ scale: 1.04, y: -2 }}
                   whileTap={{ scale: 0.96 }}
@@ -409,8 +410,8 @@ export default function Home() {
                   Enter The Vault
                   <ArrowRight className="w-4 h-4" />
                 </motion.button>
-              </Link>
-              <Link href="/architecture">
+              </TransitionLink>
+              <TransitionLink href="/architecture">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
@@ -420,7 +421,7 @@ export default function Home() {
                   How It Works
                   <ChevronRight className="w-4 h-4" />
                 </motion.button>
-              </Link>
+              </TransitionLink>
             </motion.div>
 
             {/* Trust signals */}
