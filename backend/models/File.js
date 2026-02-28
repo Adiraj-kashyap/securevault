@@ -34,7 +34,11 @@ const fileSchema = new mongoose.Schema({
     },
     blobReference: {
         type: String,
-        required: true // The ID pointing to the actual encrypted/compressed blob in GridFS or Object Storage
+        default: null // kept for backward-compat; actual data is in blobData
+    },
+    blobData: {
+        type: Buffer, // Encrypted file binary stored directly in MongoDB
+        default: null
     },
     sharedWith: [{
         tagline: String, // The recipient's user tagline

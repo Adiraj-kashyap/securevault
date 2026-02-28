@@ -129,7 +129,7 @@ exports.getSharedFiles = async (req, res) => {
     }
 };
 
-// Upload a new file
+// Upload a new file — stores encrypted binary in MongoDB Atlas
 exports.uploadFile = async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -140,18 +140,28 @@ exports.uploadFile = async (req, res) => {
         }
 
         const newFile = new File({
-            filename: originalName,
+            filename: originalName || req.file.originalname || 'untitled',
             owner: userId,
             folder: folderId || null,
             mimeType: req.file.mimetype || 'application/octet-stream',
             encryptedKey: encryptedKey,
             size: req.file.size,
             storageLevel: storageLevel || 'hot',
-            blobReference: req.file.filename // multer generates this
+            blobReference: originalName || req.file.originalname || 'mongo',
+            blobData: req.file.buffer  // Store encrypted binary directly in MongoDB
         });
 
         await newFile.save();
-        res.status(201).json({ message: 'File uploaded successfully', file: newFile });
+        res.status(201).json({
+            message: 'File uploaded and stored in vault',
+            file: {
+                _id: newFile._id,
+                filename: newFile.filename,
+                size: newFile.size,
+                storageLevel: newFile.storageLevel,
+                createdAt: newFile.createdAt
+            }
+        });
     } catch (error) {
         console.error('File Upload Error:', error);
         res.status(500).json({ error: 'Failed to upload file' });
