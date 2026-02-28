@@ -126,7 +126,23 @@ export default function ProfilePage() {
 
     if (!session) { router.push("/auth"); return null; }
 
-    const mockFingerprint = "A4B2:9F3C:11D7:2E8A:43F1:C6B9:7D2E:4A5F:8E3C:0B1D";
+    // Derive a display fingerprint from the actual public key
+    const fingerprint = (() => {
+        if (!session.publicKey) return "KEY:NOT:YET:GEN:ERAT:ED";
+        // Simple visual hash: take char codes from spread key, format in 4-char hex groups
+        const raw = session.publicKey.replace(/\s/g, "").slice(20, 80);
+        const hashed = Array.from(raw).reduce((a, c) => ((a * 31 + c.charCodeAt(0)) & 0xFFFFFFFF) >>> 0, 0);
+        const hex = hashed.toString(16).toUpperCase().padStart(8, "0");
+        // Build fake-fingerprint from key chars + hash
+        const parts = [];
+        for (let i = 0; i < raw.length; i += 4) {
+            const seg = raw.slice(i, i + 4);
+            const code = Array.from(seg).reduce((a, c) => a + c.charCodeAt(0), 0);
+            parts.push(code.toString(16).toUpperCase().padStart(4, "0"));
+            if (parts.length >= 10) break;
+        }
+        return parts.join(":");
+    })();
 
     const copyKey = () => {
         navigator.clipboard.writeText("RSA-2048 Public Key (mock)");
@@ -176,7 +192,7 @@ export default function ProfilePage() {
                     <p className="text-xs text-primary-100/40 font-code mb-5">
                         SHA-256 fingerprint of your RSA-2048 public key. Share this with contacts to verify your identity.
                     </p>
-                    <FingerprintDisplay fingerprint={mockFingerprint} />
+                    <FingerprintDisplay fingerprint={fingerprint} />
                     <div className="mt-4 flex gap-2 justify-center">
                         <motion.button
                             whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}

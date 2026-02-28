@@ -70,18 +70,18 @@ function ScrambleText({ text, startDelay }: { text: string; startDelay: number }
                     continue;
                 }
 
-                // Scramble this position 6 times before locking
-                for (let s = 0; s < 6; s++) {
+                // Scramble this position 3 times before locking (fast)
+                for (let s = 0; s < 3; s++) {
                     if (cancelled) return;
                     const scrambled = HEX_CHARS[rand(16)];
                     setDisplayChars(prev => { const n = [...prev]; n[i] = scrambled; return n; });
-                    await sleep(32);
+                    await sleep(20);
                 }
 
                 // Lock the correct character
                 if (!cancelled) {
                     setDisplayChars(prev => { const n = [...prev]; n[i] = text[i]; return n; });
-                    await sleep(38);
+                    await sleep(20);
                 }
             }
         }
@@ -236,16 +236,17 @@ export function AuthSuccessAnimation({
     const called = useRef(false);
 
     // Phase timer chain
+    // 13 non-space chars × ~80ms ≈ 1040ms. Phase 3 starts at 450ms → text done ≈ 1490ms
     useEffect(() => {
         const timers = [
-            setTimeout(() => setPhase(2), 350),   // scanner starts
-            setTimeout(() => setPhase(3), 750),   // text assembles
-            setTimeout(() => setPhase(4), 1200),  // ring forms
-            setTimeout(() => setPhase(5), 1850),  // burst
-            setTimeout(() => setPhase(6), 2100),  // implode
-            setTimeout(() => {                     // done
+            setTimeout(() => setPhase(2), 300),   // scanner sweeps
+            setTimeout(() => setPhase(3), 450),   // scramble text starts
+            setTimeout(() => setPhase(4), 1700),  // ring forms (after text done ~1490ms)
+            setTimeout(() => setPhase(5), 2100),  // burst
+            setTimeout(() => setPhase(6), 2400),  // implode
+            setTimeout(() => {                     // navigate
                 if (!called.current) { called.current = true; onComplete(); }
-            }, 2600),
+            }, 2900),
         ];
         return () => timers.forEach(clearTimeout);
     }, [onComplete]);

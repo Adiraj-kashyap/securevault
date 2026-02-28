@@ -24,10 +24,26 @@ interface SessionContextType {
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-    const [session, setSession] = useState<VaultSession | null>(null);
+    const [session, setSessionState] = useState<VaultSession | null>(() => {
+        // Restore from sessionStorage on mount (survives hard reloads within same tab)
+        if (typeof window === "undefined") return null;
+        try {
+            const stored = sessionStorage.getItem("sv_session");
+            return stored ? JSON.parse(stored) : null;
+        } catch { return null; }
+    });
+
+    const setSession = (s: VaultSession | null) => {
+        setSessionState(s);
+        if (typeof window === "undefined") return;
+        if (s) {
+            try { sessionStorage.setItem("sv_session", JSON.stringify(s)); } catch { }
+        } else {
+            sessionStorage.removeItem("sv_session");
+        }
+    };
 
     const logout = () => {
-        // Clear everything from memory
         setSession(null);
     };
 
