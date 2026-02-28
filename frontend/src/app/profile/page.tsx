@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import {
     Fingerprint, Copy, Download, KeyRound, Shield, CheckCircle,
@@ -32,55 +32,50 @@ function FingerprintDisplay({ fingerprint }: { fingerprint: string }) {
 function IdentIcon({ email }: { email: string }) {
     const COLS = 5, ROWS = 5;
     const CELL = COLS * ROWS;
+    const DIRS: [number, number][] = [[1, 0], [0, 1], [-1, 0], [0, -1]];
 
-    // Derive initial snake path from email hash so each user looks unique
     const hash = Array.from(email).reduce((a, c) => a + c.charCodeAt(0), 0);
-    const dirs: [number, number][] = [[1, 0], [0, 1], [-1, 0], [0, -1]];
-    const startDir = hash % 4;
 
     const [snake, setSnake] = useState<number[]>(() => [hash % CELL]);
-    const [dir, setDir] = useState<[number, number]>(dirs[startDir]);
     const [lit, setLit] = useState<Set<number>>(new Set([hash % CELL]));
+    // dir lives in a ref so changing it NEVER restarts the interval
+    const dirRef = useRef<[number, number]>(DIRS[hash % 4]);
 
     useEffect(() => {
         const tick = setInterval(() => {
             setSnake(prev => {
                 const head = prev[0];
                 const hx = head % COLS, hy = Math.floor(head / COLS);
-
-                // Try current dir; if wall, pick a new valid dir
-                let [dx, dy] = dir;
+                let [dx, dy] = dirRef.current;
                 const nx = hx + dx, ny = hy + dy;
+
+                // If hitting a wall pick a new valid direction (excluding reverse)
                 if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) {
-                    // Pick a random valid direction
-                    const valid = dirs.filter(([ddx, ddy]) => {
+                    const [rdx, rdy] = [-dx, -dy]; // reverse direction
+                    const valid = DIRS.filter(([ddx, ddy]) => {
+                        if (ddx === rdx && ddy === rdy) return false; // never go backwards
                         const vx = hx + ddx, vy = hy + ddy;
                         return vx >= 0 && vx < COLS && vy >= 0 && vy < ROWS;
                     });
-                    const pick = valid[Math.floor(Math.random() * valid.length)] ?? [1, 0];
-                    setDir(pick);
+                    const pick = valid[Math.floor(Math.random() * valid.length)] ?? DIRS[0];
+                    dirRef.current = pick;
                     const newHead = (hy + pick[1]) * COLS + (hx + pick[0]);
-                    const next = [newHead, ...prev].slice(0, 8); // max length 8
-                    setLit(s => new Set([...s, newHead]));
-                    if (next.length === 8) {
-                        // Reset after full coverage
-                        setTimeout(() => { setSnake([hash % CELL]); setLit(new Set([hash % CELL])); }, 400);
-                    }
+                    const next = [newHead, ...prev].slice(0, 6); // keep length at 6; no reset
+                    setLit(s => new Set([...Array.from(s).slice(-20), newHead])); // rolling trail
                     return next;
                 }
 
                 const newHead = ny * COLS + nx;
-                const next = [newHead, ...prev].slice(0, 8);
-                setLit(s => new Set([...s, newHead]));
-                if (next.length === 8) {
-                    setTimeout(() => { setSnake([hash % CELL]); setLit(new Set([hash % CELL])); }, 400);
-                }
+                const next = [newHead, ...prev].slice(0, 6);
+                setLit(s => new Set([...Array.from(s).slice(-20), newHead]));
                 return next;
             });
-        }, 180);
+        }, 160);
         return () => clearInterval(tick);
+        // Empty dep array — single stable interval for the lifetime of the component
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dir]);
+    }, []);
+
 
     return (
         <div className="grid grid-cols-5 gap-1 w-24 h-24">
