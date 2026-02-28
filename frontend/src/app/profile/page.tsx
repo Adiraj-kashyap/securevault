@@ -47,21 +47,37 @@ function IdentIcon({ email }: { email: string }) {
                 const head = prev[0];
                 const hx = head % COLS, hy = Math.floor(head / COLS);
                 let [dx, dy] = dirRef.current;
+                const [rdx, rdy] = [-dx, -dy]; // reverse — never allowed
+
+                // 25% chance: randomly turn to any valid non-reverse direction
+                const shouldWander = Math.random() < 0.25;
+                if (shouldWander) {
+                    const candidates = DIRS.filter(([ddx, ddy]) => {
+                        if (ddx === rdx && ddy === rdy) return false;
+                        const vx = hx + ddx, vy = hy + ddy;
+                        return vx >= 0 && vx < COLS && vy >= 0 && vy < ROWS;
+                    });
+                    if (candidates.length > 0) {
+                        const pick = candidates[Math.floor(Math.random() * candidates.length)];
+                        dirRef.current = pick;
+                        [dx, dy] = pick;
+                    }
+                }
+
                 const nx = hx + dx, ny = hy + dy;
 
-                // If hitting a wall pick a new valid direction (excluding reverse)
+                // If still hitting a wall (shouldn't happen but safety net), force a valid direction
                 if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) {
-                    const [rdx, rdy] = [-dx, -dy]; // reverse direction
                     const valid = DIRS.filter(([ddx, ddy]) => {
-                        if (ddx === rdx && ddy === rdy) return false; // never go backwards
+                        if (ddx === rdx && ddy === rdy) return false;
                         const vx = hx + ddx, vy = hy + ddy;
                         return vx >= 0 && vx < COLS && vy >= 0 && vy < ROWS;
                     });
                     const pick = valid[Math.floor(Math.random() * valid.length)] ?? DIRS[0];
                     dirRef.current = pick;
                     const newHead = (hy + pick[1]) * COLS + (hx + pick[0]);
-                    const next = [newHead, ...prev].slice(0, 6); // keep length at 6; no reset
-                    setLit(s => new Set([...Array.from(s).slice(-20), newHead])); // rolling trail
+                    const next = [newHead, ...prev].slice(0, 6);
+                    setLit(s => new Set([...Array.from(s).slice(-20), newHead]));
                     return next;
                 }
 
@@ -70,11 +86,11 @@ function IdentIcon({ email }: { email: string }) {
                 setLit(s => new Set([...Array.from(s).slice(-20), newHead]));
                 return next;
             });
-        }, 160);
+        }, 140); // slightly faster for livelier feel
         return () => clearInterval(tick);
-        // Empty dep array — single stable interval for the lifetime of the component
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
 
 
     return (
