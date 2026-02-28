@@ -10,6 +10,8 @@ export type MotionLevel = "full" | "reduced" | "none";
 export type FontStyle = "syne" | "inter" | "mono";
 export type Density = "compact" | "default" | "spacious";
 export type BorderRadius = "sharp" | "normal" | "round";
+export type TransitionStyle = "iris" | "shatter" | "portal";
+export type SuccessStyle = "handshake" | "decrypt" | "assemble";
 
 interface AppearanceState {
     bgPattern: BgPattern;
@@ -20,6 +22,8 @@ interface AppearanceState {
     borderRadius: BorderRadius;
     particles: boolean;
     pageTransition: boolean;
+    transitionStyle: TransitionStyle;
+    successStyle: SuccessStyle;
 }
 
 interface AppearanceContextType extends AppearanceState {
@@ -31,6 +35,8 @@ interface AppearanceContextType extends AppearanceState {
     setBorderRadius: (v: BorderRadius) => void;
     setParticles: (v: boolean) => void;
     setPageTransition: (v: boolean) => void;
+    setTransitionStyle: (v: TransitionStyle) => void;
+    setSuccessStyle: (v: SuccessStyle) => void;
 }
 
 /* ── Defaults ───────────────────────────────────────────────── */
@@ -43,6 +49,8 @@ const DEFAULTS: AppearanceState = {
     borderRadius: "normal",
     particles: true,
     pageTransition: true,
+    transitionStyle: "iris",
+    successStyle: "handshake",
 };
 
 /* ── CSS application helpers ────────────────────────────────── */
@@ -101,6 +109,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
             setBorderRadius: v => update("borderRadius", v),
             setParticles: v => update("particles", v),
             setPageTransition: v => update("pageTransition", v),
+            setTransitionStyle: v => update("transitionStyle", v),
+            setSuccessStyle: v => update("successStyle", v),
         }}>
             {children}
         </AppearanceContext.Provider>
