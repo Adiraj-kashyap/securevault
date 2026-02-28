@@ -180,7 +180,7 @@ export function NavbarClient() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ type: "spring", stiffness: 320, damping: 26 }}
-                      className="absolute right-0 mt-2 w-54 glass-nav border border-white/8 rounded-2xl shadow-2xl p-2 z-50 origin-top-right"
+                      className="absolute right-0 mt-2 w-54 glass-nav border border-white/8 rounded-2xl shadow-2xl p-2 z-[60] origin-top-right"
                       style={{ width: "220px" }}
                     >
                       <div className="px-3 py-2.5 mb-1 border-b border-white/5">

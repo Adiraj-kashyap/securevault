@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
     Fingerprint, Copy, Download, KeyRound, Shield, CheckCircle,
@@ -30,21 +30,90 @@ function FingerprintDisplay({ fingerprint }: { fingerprint: string }) {
 }
 
 function IdentIcon({ email }: { email: string }) {
-    // Simple visual hash grid based on email
-    const hash = Array.from(email).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-    const grid = Array.from({ length: 25 }, (_, i) => (hash >> (i % 16)) & 1);
+    const COLS = 5, ROWS = 5;
+    const CELL = COLS * ROWS;
+
+    // Derive initial snake path from email hash so each user looks unique
+    const hash = Array.from(email).reduce((a, c) => a + c.charCodeAt(0), 0);
+    const dirs: [number, number][] = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+    const startDir = hash % 4;
+
+    const [snake, setSnake] = useState<number[]>(() => [hash % CELL]);
+    const [dir, setDir] = useState<[number, number]>(dirs[startDir]);
+    const [lit, setLit] = useState<Set<number>>(new Set([hash % CELL]));
+
+    useEffect(() => {
+        const tick = setInterval(() => {
+            setSnake(prev => {
+                const head = prev[0];
+                const hx = head % COLS, hy = Math.floor(head / COLS);
+
+                // Try current dir; if wall, pick a new valid dir
+                let [dx, dy] = dir;
+                const nx = hx + dx, ny = hy + dy;
+                if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) {
+                    // Pick a random valid direction
+                    const valid = dirs.filter(([ddx, ddy]) => {
+                        const vx = hx + ddx, vy = hy + ddy;
+                        return vx >= 0 && vx < COLS && vy >= 0 && vy < ROWS;
+                    });
+                    const pick = valid[Math.floor(Math.random() * valid.length)] ?? [1, 0];
+                    setDir(pick);
+                    const newHead = (hy + pick[1]) * COLS + (hx + pick[0]);
+                    const next = [newHead, ...prev].slice(0, 8); // max length 8
+                    setLit(s => new Set([...s, newHead]));
+                    if (next.length === 8) {
+                        // Reset after full coverage
+                        setTimeout(() => { setSnake([hash % CELL]); setLit(new Set([hash % CELL])); }, 400);
+                    }
+                    return next;
+                }
+
+                const newHead = ny * COLS + nx;
+                const next = [newHead, ...prev].slice(0, 8);
+                setLit(s => new Set([...s, newHead]));
+                if (next.length === 8) {
+                    setTimeout(() => { setSnake([hash % CELL]); setLit(new Set([hash % CELL])); }, 400);
+                }
+                return next;
+            });
+        }, 180);
+        return () => clearInterval(tick);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dir]);
+
     return (
         <div className="grid grid-cols-5 gap-1 w-24 h-24">
-            {grid.map((on, i) => (
-                <motion.div
-                    key={i}
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.015, type: "spring" }}
-                    className={`rounded-sm ${on ? "bg-accent-500" : "bg-accent-900/30"}`}
-                    style={{ boxShadow: on ? "0 0 6px rgba(var(--theme-glow-rgb), 0.4)" : undefined }}
-                />
-            ))}
+            {Array.from({ length: CELL }).map((_, i) => {
+                const isHead = i === snake[0];
+                const isBody = snake.includes(i);
+                const isTrail = lit.has(i) && !isBody;
+                return (
+                    <motion.div
+                        key={i}
+                        animate={{
+                            scale: isHead ? 1.15 : isBody ? 1 : 0.85,
+                            opacity: isHead ? 1 : isBody ? 0.85 : isTrail ? 0.18 : 0.06,
+                        }}
+                        transition={{ duration: 0.15 }}
+                        className="rounded-sm"
+                        style={{
+                            background: isHead
+                                ? `rgba(var(--theme-glow-rgb), 1)`
+                                : isBody
+                                    ? `rgba(var(--theme-glow-rgb), 0.7)`
+                                    : isTrail
+                                        ? `rgba(var(--theme-glow-rgb), 0.18)`
+                                        : `rgba(var(--theme-glow-rgb), 0.06)`,
+                            boxShadow: isHead
+                                ? `0 0 10px rgba(var(--theme-glow-rgb), 0.9)`
+                                : isBody
+                                    ? `0 0 5px rgba(var(--theme-glow-rgb), 0.4)`
+                                    : undefined,
+                        }}
+                    />
+                );
+            })}
         </div>
     );
 }

@@ -89,8 +89,8 @@ function SidebarLink({
         whileHover={{ x: 4 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all relative ${active
-            ? "bg-accent-900/40 text-accent-300"
-            : "text-primary-100/48 hover:text-primary-100 hover:bg-white/5"
+          ? "bg-accent-900/40 text-accent-300"
+          : "text-primary-100/48 hover:text-primary-100 hover:bg-white/5"
           }`}
       >
         {active && (
@@ -179,10 +179,10 @@ export default function Dashboard() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -280, opacity: 0 }}
             transition={{ type: "spring", stiffness: 280, damping: 30 }}
-            className="fixed left-0 top-[76px] bottom-0 w-64 glass-panel z-30 flex flex-col py-5 px-3 border-r border-white/5"
+            className="fixed left-0 top-[76px] bottom-0 w-64 glass-panel z-30 flex flex-col py-5 px-3 border-r border-white/5 overflow-hidden"
           >
             {/* User identity */}
-            <div className="px-2 mb-5">
+            <div className="px-2 mb-5 flex-shrink-0">
               <div className="glass rounded-2xl p-3.5 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl identicon-placeholder flex items-center justify-center flex-shrink-0">
                   <span className="font-code font-bold text-accent-300 text-sm">
@@ -199,8 +199,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Nav */}
-            <nav className="space-y-0.5 flex-1">
+            {/* Nav — scrollable so nothing bleeds below */}
+            <nav className="space-y-0.5 flex-1 overflow-y-auto scrollbar-none">
               {sideLinks.map(({ href, label, icon: Icon }) => (
                 <SidebarLink
                   key={href}
@@ -212,8 +212,8 @@ export default function Dashboard() {
               ))}
             </nav>
 
-            {/* Storage usage */}
-            <div className="px-1 mt-4">
+            {/* Storage usage — pinned above sign out */}
+            <div className="px-1 mt-4 flex-shrink-0">
               <div className="glass rounded-2xl p-3.5">
                 <div className="flex items-center justify-between mb-2.5">
                   <span className="text-xs text-primary-100/38">Vault Storage</span>
@@ -246,16 +246,17 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Logout */}
+            {/* Logout — always at very bottom, never overlapping footer */}
             <motion.button
               whileHover={{ x: 3 }}
               onClick={() => { logout(); router.push("/"); }}
-              className="flex items-center gap-3 px-4 py-2.5 mx-1 mt-3 rounded-xl text-sm text-primary-100/38 hover:text-danger hover:bg-danger/8 transition-all"
+              className="flex items-center gap-3 px-4 py-2.5 mx-1 mt-3 mb-1 rounded-xl text-sm text-primary-100/38 hover:text-danger hover:bg-danger/8 transition-all flex-shrink-0"
             >
               <LogOut className="w-4 h-4" />
               Sign Out
             </motion.button>
           </motion.aside>
+
         )}
       </AnimatePresence>
 
@@ -285,8 +286,8 @@ export default function Dashboard() {
                   <button
                     onClick={() => navigateToBreadcrumb(bc, i)}
                     className={`text-sm transition-colors truncate max-w-[120px] ${i === breadcrumbs.length - 1
-                        ? "text-primary-100 font-semibold"
-                        : "text-primary-100/38 hover:text-primary-100"
+                      ? "text-primary-100 font-semibold"
+                      : "text-primary-100/38 hover:text-primary-100"
                       }`}
                   >
                     {i === 0 ? <Home className="w-4 h-4 inline" /> : bc.name}

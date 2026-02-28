@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Settings, Shield, Key, Bell, Lock, ChevronLeft, AlertTriangle, ChevronRight, Moon, Zap, HardDrive, Snowflake } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Settings, Shield, Key, Bell, Lock, ChevronLeft, AlertTriangle,
+  ChevronRight, Moon, Zap, HardDrive, Snowflake, Sparkles,
+  Palette, Type, Layers, Gauge, Wind, LayoutGrid, Flame
+} from "lucide-react";
 import Link from "next/link";
 import { useSession } from "../SessionContext";
 import { useRouter } from "next/navigation";
@@ -65,36 +69,46 @@ function DangerZoneItem({ label, desc, action }: { label: string; desc: string; 
 
 export default function SettingsPage() {
   const { session } = useSession();
-  const router      = useRouter();
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("security");
 
   // Setting states
-  const [mfa,           setMfa]           = useState(false);
-  const [sessionLock,   setSessionLock]   = useState(true);
-  const [loginAlerts,   setLoginAlerts]   = useState(true);
-  const [defaultTier,   setDefaultTier]   = useState<"hot"|"warm"|"cold">("hot");
-  const [autoCompress,  setAutoCompress]  = useState(true);
-  const [uploadNotifs,  setUploadNotifs]  = useState(true);
-  const [msgNotifs,     setMsgNotifs]     = useState(true);
+  const [mfa, setMfa] = useState(false);
+  const [sessionLock, setSessionLock] = useState(true);
+  const [loginAlerts, setLoginAlerts] = useState(true);
+  const [defaultTier, setDefaultTier] = useState<"hot" | "warm" | "cold">("hot");
+  const [autoCompress, setAutoCompress] = useState(true);
+  const [uploadNotifs, setUploadNotifs] = useState(true);
+  const [msgNotifs, setMsgNotifs] = useState(true);
+
+  // Appearance states
+  const [particles, setParticles] = useState(true);
+  const [pageTransition, setPageTransition] = useState(true);
+  const [motionLevel, setMotionLevel] = useState<"full" | "reduced" | "none">("full");
+  const [borderRadius, setBorderRadius] = useState<"sharp" | "normal" | "round">("normal");
+  const [fontStyle, setFontStyle] = useState<"inter" | "mono" | "syne">("syne");
+  const [density, setDensity] = useState<"compact" | "default" | "spacious">("default");
+  const [glowIntensity, setGlowIntensity] = useState(70);
+  const [bgPattern, setBgPattern] = useState<"none" | "dots" | "grid" | "hex">("hex");
 
   if (!session) { router.push("/auth"); return null; }
 
   const TABS: { id: Tab; label: string; icon: any }[] = [
-    { id: "security",      label: "Security",      icon: Shield },
-    { id: "storage",       label: "Storage",       icon: HardDrive },
+    { id: "security", label: "Security", icon: Shield },
+    { id: "storage", label: "Storage", icon: HardDrive },
     { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "appearance",    label: "Appearance",    icon: Moon },
+    { id: "appearance", label: "Appearance", icon: Moon },
   ];
 
   return (
     <div className="min-h-screen px-4 py-10 max-w-2xl mx-auto">
-      <motion.div initial={{ opacity:0, x:-10 }} animate={{ opacity:1, x:0 }} className="mb-8">
+      <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
         <Link href="/dashboard" className="flex items-center gap-2 text-primary-100/40 hover:text-primary-100/80 text-sm transition-colors">
           <ChevronLeft className="w-4 h-4" /> Back to Vault
         </Link>
       </motion.div>
 
-      <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-3 mb-8">
           <Settings className="w-7 h-7 text-accent-500" />
           <div>
@@ -109,11 +123,10 @@ export default function SettingsPage() {
             <button
               key={id}
               onClick={() => setTab(id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap flex-1 justify-center ${
-                tab === id
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap flex-1 justify-center ${tab === id
                   ? "bg-accent-500 text-primary-900"
                   : "text-primary-100/50 hover:text-primary-100"
-              }`}
+                }`}
             >
               <Icon className="w-4 h-4" />
               <span className="hidden sm:inline">{label}</span>
@@ -123,7 +136,7 @@ export default function SettingsPage() {
 
         {/* Security */}
         {tab === "security" && (
-          <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} className="space-y-4">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <div className="glass-card rounded-2xl p-5">
               <h2 className="font-semibold text-base text-primary-100 mb-4 flex items-center gap-2">
                 <Shield className="w-4 h-4 text-accent-500" /> Authentication
@@ -181,25 +194,24 @@ export default function SettingsPage() {
 
         {/* Storage */}
         {tab === "storage" && (
-          <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} className="space-y-4">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <div className="glass-card rounded-2xl p-5">
               <h2 className="font-semibold text-base text-primary-100 mb-4 flex items-center gap-2">
                 <HardDrive className="w-4 h-4 text-accent-500" /> Default Storage Tier
               </h2>
               <div className="grid grid-cols-3 gap-3">
                 {([
-                  { id:"hot",  icon:Zap,       label:"Hot",  sub:"Instant",   color:"text-orange-400" },
-                  { id:"warm", icon:HardDrive, label:"Warm", sub:"Compressed", color:"text-accent-400" },
-                  { id:"cold", icon:Snowflake, label:"Cold", sub:"Archive",    color:"text-cyan-400" },
+                  { id: "hot", icon: Zap, label: "Hot", sub: "Instant", color: "text-orange-400" },
+                  { id: "warm", icon: HardDrive, label: "Warm", sub: "Compressed", color: "text-accent-400" },
+                  { id: "cold", icon: Snowflake, label: "Cold", sub: "Archive", color: "text-cyan-400" },
                 ] as const).map(({ id, icon: Icon, label, sub, color }) => (
                   <motion.button
                     key={id}
                     whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => setDefaultTier(id)}
-                    className={`glass-card p-4 rounded-xl text-left transition-all border-2 ${
-                      defaultTier === id ? `border-current ${color}` : "border-transparent"
-                    }`}
+                    className={`glass-card p-4 rounded-xl text-left transition-all border-2 ${defaultTier === id ? `border-current ${color}` : "border-transparent"
+                      }`}
                   >
                     <Icon className={`w-5 h-5 mb-2 ${defaultTier === id ? color : "text-primary-100/30"}`} />
                     <p className={`text-sm font-bold ${defaultTier === id ? color : "text-primary-100/50"}`}>{label}</p>
@@ -221,7 +233,7 @@ export default function SettingsPage() {
 
         {/* Notifications */}
         {tab === "notifications" && (
-          <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}>
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <div className="glass-card rounded-2xl p-5">
               <h2 className="font-semibold text-base text-primary-100 mb-4 flex items-center gap-2">
                 <Bell className="w-4 h-4 text-accent-500" /> Notification Preferences
@@ -238,19 +250,194 @@ export default function SettingsPage() {
 
         {/* Appearance */}
         {tab === "appearance" && (
-          <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}>
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+
+            {/* ── 1. Color Palette ── */}
             <div className="glass-card rounded-2xl p-5">
-              <h2 className="font-semibold text-base text-primary-100 mb-4 flex items-center gap-2">
-                <Moon className="w-4 h-4 text-accent-500" /> Interface Theme
+              <h2 className="font-semibold text-base text-primary-100 mb-1 flex items-center gap-2">
+                <Palette className="w-4 h-4 text-accent-500" /> Color Palette
               </h2>
+              <p className="text-xs text-primary-100/35 mb-4">Pick an accent theme. All colors adapt globally.</p>
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-primary-100">Color Palette</p>
-                  <p className="text-xs text-primary-100/40 mt-0.5">Choose from 5 premium color themes</p>
-                </div>
                 <ThemeSelector />
+                <span className="text-[10px] font-code text-primary-100/30">5 themes available</span>
+              </div>
+
+              {/* Extended palette cards */}
+              <div className="grid grid-cols-3 gap-3 mt-4">
+                {[
+                  { name: "Void Purple", color: "#8b5cf6", active: true, premium: false },
+                  { name: "Emerald", color: "#10b981", active: false, premium: false },
+                  { name: "Sapphire", color: "#3b82f6", active: false, premium: false },
+                  { name: "Gold", color: "#f59e0b", active: false, premium: false },
+                  { name: "Rose Quartz", color: "#f43f5e", active: false, premium: true },
+                  { name: "Neon Cyan", color: "#06b6d4", active: false, premium: true },
+                  { name: "Sunset Orange", color: "#f97316", active: false, premium: true },
+                  { name: "Toxic Lime", color: "#84cc16", active: false, premium: true },
+                  { name: "Cherry Blossom", color: "#ec4899", active: false, premium: true },
+                ].map(p => (
+                  <motion.button
+                    key={p.name}
+                    whileHover={{ y: -2, scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className={`relative glass-card p-3 rounded-xl text-left border-2 transition-all ${p.active ? "border-accent-500/60" : "border-transparent"
+                      }`}
+                  >
+                    {p.premium && (
+                      <span className="absolute -top-1.5 -right-1.5 text-[8px] font-bold bg-amber-500/90 text-black px-1.5 py-0.5 rounded-full">PREMIUM</span>
+                    )}
+                    <div className="w-6 h-6 rounded-full mb-2" style={{ background: p.color, boxShadow: `0 0 10px ${p.color}60` }} />
+                    <p className="text-[11px] text-primary-100/65 font-medium truncate">{p.name}</p>
+                  </motion.button>
+                ))}
               </div>
             </div>
+
+            {/* ── 2. Background Pattern ── */}
+            <div className="glass-card rounded-2xl p-5">
+              <h2 className="font-semibold text-base text-primary-100 mb-1 flex items-center gap-2">
+                <LayoutGrid className="w-4 h-4 text-accent-500" /> Background Pattern
+              </h2>
+              <p className="text-xs text-primary-100/35 mb-4">Subtle texture behind page content.</p>
+              <div className="grid grid-cols-4 gap-3">
+                {(["none", "dots", "grid", "hex"] as const).map(p => (
+                  <motion.button
+                    key={p}
+                    whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                    onClick={() => setBgPattern(p)}
+                    className={`glass-card p-3 rounded-xl text-center border-2 transition-all capitalize text-sm ${bgPattern === p ? "border-accent-500/60 text-accent-400" : "border-transparent text-primary-100/45"
+                      }`}
+                  >
+                    {p === "none" ? "Off" : p}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* ── 3. Animations ── */}
+            <div className="glass-card rounded-2xl p-5">
+              <h2 className="font-semibold text-base text-primary-100 mb-4 flex items-center gap-2">
+                <Wind className="w-4 h-4 text-accent-500" /> Animations & Motion
+              </h2>
+              <SettingRow icon={Sparkles} label="Particle Network" desc="Interactive background particle canvas">
+                <Toggle on={particles} onChange={setParticles} />
+              </SettingRow>
+              <SettingRow icon={Zap} label="Page Transitions" desc="Vault iris animation between pages">
+                <Toggle on={pageTransition} onChange={setPageTransition} />
+              </SettingRow>
+              <div className="pt-3">
+                <p className="text-sm font-medium text-primary-100 mb-3 flex items-center gap-2">
+                  <Gauge className="w-4 h-4 text-accent-500" /> Motion Intensity
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  {(["full", "reduced", "none"] as const).map(m => (
+                    <motion.button
+                      key={m}
+                      whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
+                      onClick={() => setMotionLevel(m)}
+                      className={`glass-card p-3 rounded-xl border-2 text-sm capitalize transition-all ${motionLevel === m ? "border-accent-500/60 text-accent-400" : "border-transparent text-primary-100/45"
+                        }`}
+                    >
+                      {m}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ── 4. Glow Intensity ── */}
+            <div className="glass-card rounded-2xl p-5">
+              <h2 className="font-semibold text-base text-primary-100 mb-1 flex items-center gap-2">
+                <Flame className="w-4 h-4 text-accent-500" /> Glow Intensity
+              </h2>
+              <p className="text-xs text-primary-100/35 mb-4">Controls accent aura strength across UI.</p>
+              <div className="flex items-center gap-4">
+                <span className="text-xs text-primary-100/35 font-code w-6">0</span>
+                <input
+                  type="range" min={0} max={100} value={glowIntensity}
+                  onChange={e => setGlowIntensity(+e.target.value)}
+                  className="flex-1 accent-accent-500 cursor-pointer"
+                />
+                <span className="text-xs text-accent-400 font-code w-8">{glowIntensity}%</span>
+              </div>
+              <div className="mt-3 h-0.5 rounded-full" style={{
+                background: `linear-gradient(90deg, transparent, rgba(var(--theme-glow-rgb), ${glowIntensity / 100}), transparent)`,
+                boxShadow: `0 0 ${glowIntensity / 5}px rgba(var(--theme-glow-rgb), 0.6)`,
+              }} />
+            </div>
+
+            {/* ── 5. Typography ── */}
+            <div className="glass-card rounded-2xl p-5">
+              <h2 className="font-semibold text-base text-primary-100 mb-4 flex items-center gap-2">
+                <Type className="w-4 h-4 text-accent-500" /> Font Style
+              </h2>
+              <div className="grid grid-cols-3 gap-3">
+                {([
+                  { id: "syne", label: "Syne", sub: "Display", premium: false },
+                  { id: "inter", label: "Inter", sub: "Clean", premium: false },
+                  { id: "mono", label: "JetBrains", sub: "Terminal", premium: true },
+                ] as const).map(f => (
+                  <motion.button
+                    key={f.id}
+                    whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                    onClick={() => setFontStyle(f.id)}
+                    className={`relative glass-card p-3 rounded-xl border-2 text-left transition-all ${fontStyle === f.id ? "border-accent-500/60" : "border-transparent"
+                      }`}
+                  >
+                    {f.premium && (
+                      <span className="absolute -top-1.5 -right-1.5 text-[8px] font-bold bg-amber-500/90 text-black px-1.5 py-0.5 rounded-full">PREMIUM</span>
+                    )}
+                    <p className="text-sm font-bold text-primary-100">{f.label}</p>
+                    <p className="text-[10px] text-primary-100/35">{f.sub}</p>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* ── 6. Layout ── */}
+            <div className="glass-card rounded-2xl p-5">
+              <h2 className="font-semibold text-base text-primary-100 mb-4 flex items-center gap-2">
+                <Layers className="w-4 h-4 text-accent-500" /> Layout & Density
+              </h2>
+              <div className="mb-5">
+                <p className="text-sm font-medium text-primary-100 mb-3">Interface Density</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {(["compact", "default", "spacious"] as const).map(d => (
+                    <motion.button
+                      key={d}
+                      whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
+                      onClick={() => setDensity(d)}
+                      className={`glass-card p-3 rounded-xl border-2 text-sm capitalize transition-all ${density === d ? "border-accent-500/60 text-accent-400" : "border-transparent text-primary-100/45"
+                        }`}
+                    >
+                      {d}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-primary-100 mb-3">Border Radius</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {([
+                    { id: "sharp", label: "Sharp", class: "rounded-sm" },
+                    { id: "normal", label: "Smooth", class: "rounded-xl" },
+                    { id: "round", label: "Pill", class: "rounded-full" },
+                  ] as const).map(r => (
+                    <motion.button
+                      key={r.id}
+                      whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
+                      onClick={() => setBorderRadius(r.id)}
+                      className={`glass-card p-3 border-2 text-sm transition-all flex flex-col items-center gap-2 ${borderRadius === r.id ? "border-accent-500/60 text-accent-400" : "border-transparent text-primary-100/45"
+                        } ${r.class}`}
+                    >
+                      <div className={`w-8 h-4 bg-accent-500/30 border border-accent-500/40 ${r.class}`} />
+                      {r.label}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
           </motion.div>
         )}
       </motion.div>
