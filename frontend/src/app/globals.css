@@ -1175,3 +1175,370 @@ html[data-motion="none"] * {
   animation: none !important;
   transition: none !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   PREMIUM VISUAL EFFECTS — Extra appearance goodness
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Neon Card variants ── */
+.glass-card-neon {
+  background: rgba(18, 18, 22, 0.75);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(var(--theme-glow-rgb), 0.25);
+  border-radius: 1rem;
+  box-shadow:
+    0 0 0 1px rgba(var(--theme-glow-rgb), 0.1),
+    0 0 30px rgba(var(--theme-glow-rgb), 0.08),
+    0 16px 48px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(var(--theme-glow-rgb), 0.08);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-neon:hover {
+  border-color: rgba(var(--theme-glow-rgb), 0.45);
+  box-shadow:
+    0 0 0 1px rgba(var(--theme-glow-rgb), 0.2),
+    0 0 60px rgba(var(--theme-glow-rgb), 0.12),
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(var(--theme-glow-rgb), 0.12);
+}
+
+/* ── RGB Animated border ── */
+@keyframes rgb-border-cycle {
+  0% {
+    border-color: rgba(212, 175, 55, 0.5);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+  }
+
+  25% {
+    border-color: rgba(16, 185, 129, 0.5);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+  }
+
+  50% {
+    border-color: rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+  }
+
+  75% {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+  }
+
+  100% {
+    border-color: rgba(212, 175, 55, 0.5);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+  }
+}
+
+.animate-rgb-border {
+  animation: rgb-border-cycle 6s linear infinite;
+}
+
+/* ── Gradient text shift ── */
+@keyframes gradient-text-cycle {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-text-animated {
+  background: linear-gradient(135deg,
+      rgba(var(--theme-glow-rgb), 1) 0%,
+      #ffffff 30%,
+      rgba(var(--theme-glow-rgb), 0.7) 60%,
+      #e0e0e5 80%,
+      rgba(var(--theme-glow-rgb), 1) 100%);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-text-cycle 5s ease infinite;
+}
+
+/* ── Pulse ring (notification / status) ── */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+
+  70% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.pulse-ring {
+  position: relative;
+}
+
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(var(--theme-glow-rgb), 0.4);
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+/* ── Floating xyz ── */
+@keyframes float-xyz {
+
+  0%,
+  100% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+
+  25% {
+    transform: translate(4px, -6px) rotate(1deg);
+  }
+
+  50% {
+    transform: translate(-3px, -10px) rotate(-1deg);
+  }
+
+  75% {
+    transform: translate(5px, -4px) rotate(0.5deg);
+  }
+}
+
+.animate-float-xyz {
+  animation: float-xyz 7s ease-in-out infinite;
+}
+
+/* ── Depth elevation system ── */
+.elevation-0 {
+  box-shadow: none;
+}
+
+.elevation-1 {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.elevation-2 {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.elevation-3 {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.elevation-4 {
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7), 0 0 60px rgba(var(--theme-glow-rgb), 0.05), 0 0 0 1px rgba(var(--theme-glow-rgb), 0.06);
+}
+
+/* ── Magic sparkle effect (for special elements) ── */
+@keyframes sparkle-rotate {
+  from {
+    transform: rotate(0deg) scale(1);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: rotate(180deg) scale(1.2);
+    opacity: 1;
+  }
+
+  to {
+    transform: rotate(360deg) scale(1);
+    opacity: 0.6;
+  }
+}
+
+.sparkle-icon {
+  animation: sparkle-rotate 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(var(--theme-glow-rgb), 0.8));
+}
+
+/* ── Glow intensity CSS variable usage ── */
+.glow-dynamic {
+  box-shadow: 0 0 calc(20px * var(--glow-intensity)) rgba(var(--theme-glow-rgb), calc(0.3 * var(--glow-intensity)));
+}
+
+.glow-text-dynamic {
+  text-shadow: 0 0 calc(30px * var(--glow-intensity)) rgba(var(--theme-glow-rgb), calc(0.5 * var(--glow-intensity)));
+}
+
+/* ── Appearance: Spacious density compound overrides ── */
+html[data-density="spacious"] .glass-card,
+html[data-density="spacious"] .glass-card-neon {
+  padding: 1.75rem;
+}
+
+html[data-density="spacious"] .glass-card>h2,
+html[data-density="spacious"] .glass-card-neon>h2 {
+  margin-bottom: 1.5rem;
+}
+
+html[data-density="compact"] .glass-card,
+html[data-density="compact"] .glass-card-neon {
+  padding: 0.875rem;
+}
+
+/* ── Appearance: Sharp vs Round compound overrides ── */
+html[data-radius="sharp"] .glass-card,
+html[data-radius="sharp"] .glass-card-neon,
+html[data-radius="sharp"] .glass,
+html[data-radius="sharp"] .glass-ultra {
+  border-radius: 6px !important;
+}
+
+html[data-radius="round"] .glass-card,
+html[data-radius="round"] .glass-card-neon,
+html[data-radius="round"] .glass,
+html[data-radius="round"] .glass-ultra {
+  border-radius: 28px !important;
+}
+
+html[data-radius="round"] .btn-primary,
+html[data-radius="round"] .btn-ghost,
+html[data-radius="round"] .btn-secondary,
+html[data-radius="round"] .btn-danger {
+  border-radius: 999px !important;
+}
+
+html[data-radius="sharp"] .btn-primary,
+html[data-radius="sharp"] .btn-ghost,
+html[data-radius="sharp"] .btn-secondary,
+html[data-radius="sharp"] .btn-danger {
+  border-radius: 4px !important;
+}
+
+/* ── Appearance: Font override compound ── */
+html[data-font="inter"] body,
+html[data-font="inter"] main,
+html[data-font="inter"] p,
+html[data-font="inter"] span,
+html[data-font="inter"] button,
+html[data-font="inter"] a {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+html[data-font="inter"] h1,
+html[data-font="inter"] h2,
+html[data-font="inter"] h3 {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+}
+
+html[data-font="mono"] body,
+html[data-font="mono"] main,
+html[data-font="mono"] p,
+html[data-font="mono"] span,
+html[data-font="mono"] button,
+html[data-font="mono"] a,
+html[data-font="mono"] h1,
+html[data-font="mono"] h2,
+html[data-font="mono"] h3 {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.01em;
+}
+
+/* ── Status indicator animations ── */
+@keyframes status-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+
+  50% {
+    opacity: 0.85;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0);
+  }
+}
+
+.status-online {
+  background: var(--color-safe);
+  display: inline-block;
+  border-radius: 50%;
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+.status-offline {
+  background: rgba(224, 224, 229, 0.2);
+  display: inline-block;
+  border-radius: 50%;
+}
+
+/* ── Skeleton loading variant with glow ── */
+.skeleton-glow {
+  background: linear-gradient(90deg,
+      rgba(var(--theme-glow-rgb), 0.03) 0%,
+      rgba(var(--theme-glow-rgb), 0.08) 50%,
+      rgba(var(--theme-glow-rgb), 0.03) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite;
+  border-radius: 0.5rem;
+}
+
+/* ── Holographic sheen effect ── */
+@keyframes holo-sheen {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.holo-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.holo-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg,
+      transparent 40%,
+      rgba(var(--theme-glow-rgb), 0.08) 50%,
+      rgba(255, 255, 255, 0.05) 55%,
+      transparent 60%);
+  background-size: 200% 100%;
+  animation: holo-sheen 4s linear infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ── Encrypted text effect ── */
+.encrypted-text {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.08em;
+  color: rgba(var(--theme-glow-rgb), 0.7);
+  text-shadow: 0 0 10px rgba(var(--theme-glow-rgb), 0.4);
+}
+
+/* ── Focus ring override for vault inputs ── */
+:focus-visible {
+  outline: 2px solid rgba(var(--theme-glow-rgb), 0.5);
+  outline-offset: 2px;
+}
+
+/* ── Scrollbar that uses theme color ── */
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--theme-glow-rgb), 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--theme-glow-rgb), 0.4);
+}
