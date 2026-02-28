@@ -5,6 +5,7 @@ import { ThemeProvider } from "./ThemeContext";
 import { SessionProvider } from "./SessionContext";
 import { NavbarClient } from "./NavbarClient";
 import { BackgroundCanvas } from "./BackgroundCanvas";
+import { PatternLayer } from "./PatternLayer";
 import { VaultTransitionProvider } from "./VaultTransition";
 import { FooterGuard } from "./FooterGuard";
 import { AppearanceProvider } from "./AppearanceContext";
@@ -58,6 +59,9 @@ export default function RootLayout({
                 <VaultTransitionProvider>
                   {/* Interactive particle network — behind everything */}
                   <BackgroundCanvas />
+
+                  {/* Background texture pattern layer (stars, plasma, hex, etc.) */}
+                  <PatternLayer />
 
                   {/* Vault auto-lock overlay — sits above everything */}
                   <VaultLockGuard />

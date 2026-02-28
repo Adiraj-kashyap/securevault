@@ -9,7 +9,8 @@ import { useState, useEffect } from "react";
 import { TransitionLink } from "./VaultTransition";
 import {
   Shield, LayoutDashboard, MessageSquareLock, Settings,
-  LogOut, User, ChevronDown, X, Menu, Lock, Activity, Mail
+  LogOut, User, ChevronDown, X, Menu, Lock, Activity, Mail,
+  BookOpen, Server, Tag
 } from "lucide-react";
 
 export function NavbarClient() {
@@ -18,6 +19,7 @@ export function NavbarClient() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [resourcesOpen, setResourcesOpen] = useState(false);
   // mounted guard: prevents hydration mismatch from session-based conditional rendering
   const [mounted, setMounted] = useState(false);
 
@@ -43,6 +45,11 @@ export function NavbarClient() {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/mail", label: "Mail", icon: Mail },
     { href: "/messages", label: "Messages", icon: MessageSquareLock },
+  ];
+  const resourceLinks = [
+    { href: "/features", label: "Features", icon: BookOpen, desc: "All encryption capabilities" },
+    { href: "/architecture", label: "Architecture", icon: Server, desc: "Technical deep dive" },
+    { href: "/pricing", label: "Enterprise", icon: Tag, desc: "Plans & pricing" },
   ];
 
   const isActive = (href: string) => pathname === href || pathname?.startsWith(href + "/");
@@ -87,40 +94,79 @@ export function NavbarClient() {
           {/* Desktop Links — only rendered after mount to avoid hydration mismatch */}
           <div className="hidden md:flex items-center gap-1">
             {mounted && session
-              ? privateLinks.map(({ href, label, icon: Icon }) => {
-                const active = isActive(href);
-                return (
-                  <Link key={href} href={href}>
-                    <motion.div
-                      whileHover={{ backgroundColor: "rgba(255,255,255,0.06)" }}
-                      className={`relative flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${active
-                        ? "text-accent-300"
-                        : "text-primary-100/60 hover:text-primary-100"
-                        }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      {label}
-                      {active && (
+              ? (
+                <>
+                  {privateLinks.map(({ href, label, icon: Icon }) => {
+                    const active = isActive(href);
+                    return (
+                      <Link key={href} href={href}>
                         <motion.div
-                          layoutId="nav-active"
-                          className="absolute bottom-0 left-3 right-3 h-px bg-accent-500 rounded-full"
-                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                        />
+                          whileHover={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                          className={`relative flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${active ? "text-accent-300" : "text-primary-100/60 hover:text-primary-100"}`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {label}
+                          {active && (
+                            <motion.div
+                              layoutId="nav-active"
+                              className="absolute bottom-0 left-3 right-3 h-px bg-accent-500 rounded-full"
+                              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                            />
+                          )}
+                        </motion.div>
+                      </Link>
+                    );
+                  })}
+
+                  {/* Resources dropdown */}
+                  <div className="relative">
+                    <motion.button
+                      whileHover={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                      onClick={() => setResourcesOpen(v => !v)}
+                      className="relative flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-primary-100/60 hover:text-primary-100 transition-colors"
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      More
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${resourcesOpen ? "rotate-180" : ""}`} />
+                    </motion.button>
+                    <AnimatePresence>
+                      {resourcesOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                          transition={{ type: "spring", stiffness: 320, damping: 26 }}
+                          className="absolute left-0 mt-2 z-[60] origin-top-left rounded-2xl shadow-2xl p-2 border border-white/10 min-w-[200px]"
+                          style={{ background: "rgba(10,10,14,0.97)", backdropFilter: "blur(24px)", boxShadow: "0 24px 60px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.05)" }}
+                        >
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-primary-100/25 px-3 pb-1.5 pt-1">Resources</p>
+                          {resourceLinks.map(({ href, label, icon: Icon, desc }) => (
+                            <Link key={href} href={href} onClick={() => setResourcesOpen(false)}>
+                              <motion.div
+                                whileHover={{ x: 3 }}
+                                className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-all"
+                              >
+                                <Icon className="w-4 h-4 text-accent-500/70 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <p className="text-sm font-medium text-primary-100/80">{label}</p>
+                                  <p className="text-[10px] text-primary-100/35">{desc}</p>
+                                </div>
+                              </motion.div>
+                            </Link>
+                          ))}
+                        </motion.div>
                       )}
-                    </motion.div>
-                  </Link>
-                );
-              })
+                    </AnimatePresence>
+                  </div>
+                </>
+              )
               : publicLinks.map(({ href, label }) => {
                 const active = mounted && isActive(href);
                 return (
                   <Link key={href} href={href}>
                     <motion.div
                       whileHover={{ backgroundColor: "rgba(255,255,255,0.06)" }}
-                      className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-colors ${active
-                        ? "text-accent-300"
-                        : "text-primary-100/60 hover:text-primary-100"
-                        }`}
+                      className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-colors ${active ? "text-accent-300" : "text-primary-100/60 hover:text-primary-100"}`}
                     >
                       {label}
                       {active && (
@@ -294,6 +340,29 @@ export function NavbarClient() {
                     </Link>
                   </motion.div>
                 ))}
+
+                {/* Resource links visible when logged in from mobile too */}
+                {mounted && session && (
+                  <>
+                    <motion.div variants={mobileItemVariants}>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-primary-100/25 px-4 pt-3 pb-1">Resources</p>
+                    </motion.div>
+                    {resourceLinks.map(({ href, label }) => (
+                      <motion.div key={href} variants={mobileItemVariants}>
+                        <Link
+                          href={href}
+                          onClick={() => setMobileOpen(false)}
+                          className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all ${mounted && isActive(href)
+                            ? "bg-accent-900/30 text-accent-300 border border-accent-800/30"
+                            : "text-primary-100/60 hover:text-primary-100 hover:bg-white/5"
+                            }`}
+                        >
+                          {label}
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </>
+                )}
 
                 {mounted && !session && (
                   <motion.div variants={mobileItemVariants} className="pt-2 border-t border-white/5 flex gap-2">

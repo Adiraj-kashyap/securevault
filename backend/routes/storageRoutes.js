@@ -1,8 +1,10 @@
 const express = require('express');
 const storageController = require('../controllers/storageController');
 const { requireAuth } = require('../config/authMiddleware');
+const multer = require('multer');
 
 const router = express.Router();
+const upload = multer({ dest: 'uploads/' });
 
 // Apply JWT Authentication Middleware to all storage routes
 router.use(requireAuth);
@@ -14,6 +16,7 @@ router.get('/directory/:folderId', storageController.getDirectory); // Specific 
 
 // Vault Management
 router.post('/folder', storageController.createFolder);
+router.post('/file', upload.single('file'), storageController.uploadFile);
 router.post('/file/:fileId/share', storageController.shareFile);
 router.get('/shared-with-me', storageController.getSharedFiles);
 

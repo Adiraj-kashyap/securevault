@@ -128,3 +128,32 @@ exports.getSharedFiles = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch shared files' });
     }
 };
+
+// Upload a new file
+exports.uploadFile = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { encryptedKey, storageLevel, folderId, originalName } = req.body;
+
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        const newFile = new File({
+            filename: originalName,
+            owner: userId,
+            folder: folderId || null,
+            mimeType: req.file.mimetype || 'application/octet-stream',
+            encryptedKey: encryptedKey,
+            size: req.file.size,
+            storageLevel: storageLevel || 'hot',
+            blobReference: req.file.filename // multer generates this
+        });
+
+        await newFile.save();
+        res.status(201).json({ message: 'File uploaded successfully', file: newFile });
+    } catch (error) {
+        console.error('File Upload Error:', error);
+        res.status(500).json({ error: 'Failed to upload file' });
+    }
+};

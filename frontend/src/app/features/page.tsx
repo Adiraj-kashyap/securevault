@@ -6,7 +6,7 @@ import {
   Lock, HardDrive, MessageSquare, Eye, Zap, Shield,
   Activity, Users, Globe, Key, CheckCircle, Layers,
   UploadCloud, Timer, FileKey, Database, Fingerprint,
-  ArrowRight, Star
+  ArrowRight, Star, ChevronLeft
 } from "lucide-react";
 import Link from "next/link";
 
@@ -107,6 +107,14 @@ export default function FeaturesPage() {
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
+        {/* Back nav */}
+        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="mb-10">
+          <Link href="/" className="inline-flex items-center gap-2 text-primary-100/40 hover:text-primary-100/80 text-sm transition-colors group">
+            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            Back to Home
+          </Link>
+        </motion.div>
+
         {/* Hero */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}

@@ -23,6 +23,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/securevau
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/storage', require('./routes/storageRoutes'));
 app.use('/api/mail', require('./routes/mailRoutes'));
+app.use('/api/audit', require('./routes/auditRoutes'));
 
 app.get('/', (req, res) => {
     res.send('SecureVault API is running...');

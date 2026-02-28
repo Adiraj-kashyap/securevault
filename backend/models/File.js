@@ -18,6 +18,10 @@ const fileSchema = new mongoose.Schema({
         type: String,
         required: true // original mime type, helpful for frontend rendering post-decryption
     },
+    encryptedKey: {
+        type: String,
+        required: true // The file's AES key wrapped with the uploader's public key
+    },
     size: {
         type: Number,
         required: true // size in bytes

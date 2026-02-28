@@ -37,11 +37,20 @@ export function BackgroundCanvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const mouse = useRef({ x: -999, y: -999 });
     const rafId = useRef<number>(0);
-    const particles = useRef<Particle[]>([]);
-
-    if (!showParticles) return null;
+    const particlesRef = useRef<Particle[]>([]);
 
     useEffect(() => {
+        // Honor the particles toggle — stop any running animation when disabled
+        if (!showParticles) {
+            cancelAnimationFrame(rafId.current);
+            const canvas = canvasRef.current;
+            if (canvas) {
+                const ctx = canvas.getContext("2d");
+                if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            return;
+        }
+
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext("2d")!;
@@ -55,17 +64,14 @@ export function BackgroundCanvas() {
         window.addEventListener("resize", resize, { passive: true });
 
         /* ── Init particles ── */
-        const init = () => {
-            particles.current = Array.from({ length: PARTICLE_COUNT }, () => ({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                vx: (Math.random() - 0.5) * SPEED * 2,
-                vy: (Math.random() - 0.5) * SPEED * 2,
-                r: Math.random() * 1.8 + 0.6,
-                opacity: Math.random() * 0.4 + 0.15,
-            }));
-        };
-        init();
+        particlesRef.current = Array.from({ length: PARTICLE_COUNT }, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * SPEED * 2,
+            vy: (Math.random() - 0.5) * SPEED * 2,
+            r: Math.random() * 1.8 + 0.6,
+            opacity: Math.random() * 0.4 + 0.15,
+        }));
 
         /* ── Mouse tracking ── */
         const onMouse = (e: MouseEvent) => {
@@ -84,7 +90,7 @@ export function BackgroundCanvas() {
             const rgb = getAccentRgb();
             const mx = mouse.current.x;
             const my = mouse.current.y;
-            const ps = particles.current;
+            const ps = particlesRef.current;
 
             ctx.clearRect(0, 0, W, H);
 
@@ -164,7 +170,6 @@ export function BackgroundCanvas() {
 
         rafId.current = requestAnimationFrame(draw);
 
-        /* Re-init particles on theme change (custom event) */
         const onTheme = () => { /* RGB will be picked up on next frame */ };
         window.addEventListener("themechange", onTheme);
 
@@ -175,13 +180,13 @@ export function BackgroundCanvas() {
             window.removeEventListener("mouseleave", onLeave);
             window.removeEventListener("themechange", onTheme);
         };
-    }, []);
+    }, [showParticles]);
 
     return (
         <canvas
             ref={canvasRef}
             className="fixed inset-0 w-full h-full pointer-events-none"
-            style={{ zIndex: 0, opacity: 0.85 }}
+            style={{ zIndex: 0, opacity: showParticles ? 0.85 : 0 }}
             aria-hidden="true"
         />
     );

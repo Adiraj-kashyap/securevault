@@ -306,20 +306,24 @@ export default function SettingsPage() {
               <p className="text-xs text-primary-100/35 mb-4">Subtle texture rendered behind all page content.</p>
               <div className="grid grid-cols-3 gap-3">
                 {([
-                  { id: "none", label: "Off", desc: "No texture" },
-                  { id: "dots", label: "Dots", desc: "Dot grid" },
-                  { id: "grid", label: "Grid", desc: "Line grid" },
-                  { id: "hex", label: "Hex", desc: "Honeycomb" },
-                  { id: "circuit", label: "Circuit", desc: "PCB lines" },
-                  { id: "matrix", label: "Matrix", desc: "Rain lines" },
+                  { id: "none", label: "Off", desc: "No texture", premium: false },
+                  { id: "dots", label: "Dots", desc: "Dot grid", premium: false },
+                  { id: "grid", label: "Grid", desc: "Line grid", premium: false },
+                  { id: "hex", label: "Hex", desc: "Honeycomb", premium: false },
+                  { id: "circuit", label: "Circuit", desc: "PCB lines", premium: false },
+                  { id: "stars", label: "Stars", desc: "Drifting stars", premium: false },
+                  { id: "plasma", label: "Plasma", desc: "Glow nebula", premium: false },
+                  { id: "topography", label: "Topo", desc: "Contour lines", premium: false },
                 ] as const).map(p => (
                   <motion.button
                     key={p.id}
                     whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
                     onClick={() => setBgPattern(p.id)}
-                    className={`glass-card p-3 rounded-xl text-left border-2 transition-all ${bgPattern === p.id ? "border-accent-500/60" : "border-transparent"
-                      }`}
+                    className={`relative glass-card p-3 rounded-xl text-left border-2 transition-all ${bgPattern === p.id ? "border-accent-500/60" : "border-transparent"}`}
                   >
+                    {p.premium && (
+                      <span className="absolute -top-1.5 -right-1.5 text-[8px] font-bold bg-amber-500/90 text-black px-1.5 py-0.5 rounded-full">✦ NEW</span>
+                    )}
                     <p className={`text-sm font-semibold mb-0.5 ${bgPattern === p.id ? "text-accent-400" : "text-primary-100/70"}`}>{p.label}</p>
                     <p className="text-[10px] text-primary-100/30">{p.desc}</p>
                   </motion.button>

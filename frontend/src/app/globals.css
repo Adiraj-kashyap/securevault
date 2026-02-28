@@ -1582,3 +1582,230 @@ html[data-font="mono"] h3 {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--theme-glow-rgb), 0.4);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   APPEARANCE SYSTEM — data-bg-pattern attribute driven backgrounds
+═══════════════════════════════════════════════════════════════ */
+
+/* ── None ── */
+html[data-bg-pattern="none"] body::before {
+  display: none;
+}
+
+/* ── Shared pseudo-element base ── */
+html[data-bg-pattern="dots"] body::before,
+html[data-bg-pattern="grid"] body::before,
+html[data-bg-pattern="hex"] body::before,
+html[data-bg-pattern="circuit"] body::before,
+html[data-bg-pattern="matrix"] body::before,
+html[data-bg-pattern="stars"] body::before,
+html[data-bg-pattern="plasma"] body::before,
+html[data-bg-pattern="topography"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Dots ── */
+html[data-bg-pattern="dots"] body::before {
+  background-image: radial-gradient(rgba(var(--theme-glow-rgb), 0.14) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ── Grid ── */
+html[data-bg-pattern="grid"] body::before {
+  background-image:
+    linear-gradient(rgba(var(--theme-glow-rgb), 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--theme-glow-rgb), 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── Hex ── */
+html[data-bg-pattern="hex"] body::before {
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(var(--theme-glow-rgb), 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(var(--theme-glow-rgb), 0.03) 0%, transparent 50%),
+    linear-gradient(rgba(var(--theme-glow-rgb), 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--theme-glow-rgb), 0.035) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 60px 52px, 60px 52px;
+}
+
+/* ── Circuit ── */
+html[data-bg-pattern="circuit"] body::before {
+  background-image:
+    linear-gradient(rgba(var(--theme-glow-rgb), 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--theme-glow-rgb), 0.07) 1px, transparent 1px),
+    radial-gradient(circle, rgba(var(--theme-glow-rgb), 0.15) 1.5px, transparent 1.5px);
+  background-size: 80px 80px, 80px 80px, 80px 80px;
+  background-position: 0 0, 0 0, 40px 40px;
+}
+
+/* ── Matrix ── */
+@keyframes matrix-drift {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 0 200px;
+  }
+}
+
+html[data-bg-pattern="matrix"] body::before {
+  background-image:
+    repeating-linear-gradient(0deg,
+      transparent,
+      transparent 18px,
+      rgba(var(--theme-glow-rgb), 0.04) 18px,
+      rgba(var(--theme-glow-rgb), 0.04) 19px),
+    repeating-linear-gradient(90deg,
+      transparent,
+      transparent 14px,
+      rgba(var(--theme-glow-rgb), 0.03) 14px,
+      rgba(var(--theme-glow-rgb), 0.03) 15px);
+  animation: matrix-drift 4s linear infinite;
+}
+
+/* ── Stars ── */
+@keyframes stars-drift {
+  0% {
+    transform: translateY(0px);
+  }
+
+  100% {
+    transform: translateY(-80px);
+  }
+}
+
+html[data-bg-pattern="stars"] body::before {
+  background-image:
+    radial-gradient(circle, rgba(var(--theme-glow-rgb), 0.9) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+    radial-gradient(circle, rgba(var(--theme-glow-rgb), 0.6) 1.5px, transparent 1.5px);
+  background-size: 150px 150px, 250px 250px, 300px 300px;
+  background-position: 0 0, 75px 50px, 130px 100px;
+  animation: stars-drift 12s linear infinite;
+}
+
+/* ── Plasma ── */
+@keyframes plasma-pulse {
+  0% {
+    opacity: 0.5;
+    transform: scale(1) rotate(0deg);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05) rotate(3deg);
+  }
+
+  100% {
+    opacity: 0.5;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+html[data-bg-pattern="plasma"] body::before {
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 30%, rgba(var(--theme-glow-rgb), 0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 80% 70%, rgba(var(--theme-glow-rgb), 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 50% at 50% 10%, rgba(var(--theme-glow-rgb), 0.07) 0%, transparent 50%);
+  animation: plasma-pulse 8s ease-in-out infinite;
+}
+
+/* ── Topography ── */
+html[data-bg-pattern="topography"] body::before {
+  background-image:
+    radial-gradient(ellipse 100% 60% at 50% 0%, rgba(var(--theme-glow-rgb), 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(var(--theme-glow-rgb), 0.03) 0%, transparent 60%),
+    linear-gradient(rgba(var(--theme-glow-rgb), 0.025) 1px, transparent 1px),
+    linear-gradient(60deg, rgba(var(--theme-glow-rgb), 0.015) 1px, transparent 1px),
+    linear-gradient(-60deg, rgba(var(--theme-glow-rgb), 0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 80px 80px, 80px 80px, 80px 80px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   BORDER RADIUS SYSTEM — data-radius attribute
+═══════════════════════════════════════════════════════════════ */
+html[data-radius="sharp"] .glass-card,
+html[data-radius="sharp"] .glass-ultra,
+html[data-radius="sharp"] .btn-primary,
+html[data-radius="sharp"] .btn-ghost,
+html[data-radius="sharp"] button {
+  border-radius: 4px !important;
+}
+
+html[data-radius="round"] .glass-card,
+html[data-radius="round"] .glass-ultra,
+html[data-radius="round"] .btn-primary,
+html[data-radius="round"] .btn-ghost,
+html[data-radius="round"] button {
+  border-radius: 20px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DENSITY SYSTEM — data-density attribute
+═══════════════════════════════════════════════════════════════ */
+html[data-density="compact"] main {
+  --spacing-scale: 0.75;
+}
+
+html[data-density="compact"] .glass-card {
+  padding: 12px !important;
+}
+
+html[data-density="compact"] .glass-ultra {
+  padding: 16px !important;
+}
+
+html[data-density="spacious"] .glass-card {
+  padding: 28px !important;
+}
+
+html[data-density="spacious"] .glass-ultra {
+  padding: 36px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOTION REDUCTION — data-motion attribute
+═══════════════════════════════════════════════════════════════ */
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation-duration: 0.3s !important;
+  transition-duration: 0.3s !important;
+}
+
+html[data-motion="none"] *,
+html[data-motion="none"] *::before,
+html[data-motion="none"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE IMPROVEMENTS — ensure usability on all devices
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  main {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .glass-ultra {
+    padding: 1.25rem;
+  }
+
+  .glass-card {
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .max-w-7xl {
+    max-width: 1280px;
+  }
+}

@@ -1,0 +1,34 @@
+{
+    "rules": {
+        "users": {
+            "$uid": {
+                ".read": "auth != null",
+                ".write": "$uid === auth.uid"
+            }
+        },
+        "userContacts": {
+            "$uid": {
+                ".read": "$uid === auth.uid",
+                ".write": "auth != null"
+            }
+        },
+        "groups": {
+            ".read": "auth != null",
+            ".write": "auth != null"
+        },
+        "userGroups": {
+            "$uid": {
+                ".read": "$uid === auth.uid",
+                ".write": "auth != null"
+            }
+        },
+        "messages": {
+            ".read": "auth != null",
+            ".write": "auth != null"
+        },
+        "joinCodes": {
+            ".read": "auth != null",
+            ".write": "auth != null"
+        }
+    }
+}

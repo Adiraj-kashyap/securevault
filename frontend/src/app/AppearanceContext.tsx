@@ -5,7 +5,7 @@ import React, {
 } from "react";
 
 /* ── Types ─────────────────────────────────────────────────── */
-export type BgPattern = "none" | "dots" | "grid" | "hex" | "circuit" | "matrix";
+export type BgPattern = "none" | "dots" | "grid" | "hex" | "circuit" | "stars" | "plasma" | "topography";
 export type MotionLevel = "full" | "reduced" | "none";
 export type FontStyle = "syne" | "inter" | "mono";
 export type Density = "compact" | "default" | "spacious";
