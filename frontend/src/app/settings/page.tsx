@@ -92,6 +92,8 @@ export default function SettingsPage() {
     density, setDensity,
     glowIntensity, setGlowIntensity,
     bgPattern, setBgPattern,
+    transitionStyle, setTransitionStyle,
+    successStyle, setSuccessStyle,
   } = useAppearance();
 
   if (!session) { router.push("/auth"); return null; }
@@ -336,6 +338,62 @@ export default function SettingsPage() {
               <SettingRow icon={Zap} label="Page Transitions" desc="Vault iris animation between pages">
                 <Toggle on={pageTransition} onChange={setPageTransition} />
               </SettingRow>
+
+              {/* Transition Style */}
+              <div className="pt-3">
+                <p className="text-sm font-medium text-primary-100 mb-3 flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-accent-500" /> Page Transition Style
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  {([
+                    { id: "iris", label: "Iris", desc: "Vault ring closes" },
+                    { id: "shatter", label: "Shatter", desc: "Screen fragments" },
+                    { id: "portal", label: "Portal", desc: "Vortex warp", premium: true },
+                  ] as const).map(t => (
+                    <motion.button
+                      key={t.id}
+                      whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                      onClick={() => setTransitionStyle(t.id)}
+                      className={`relative glass-card p-3 rounded-xl border-2 text-left transition-all ${transitionStyle === t.id ? "border-accent-500/60" : "border-transparent"
+                        }`}
+                    >
+                      {"premium" in t && t.premium && (
+                        <span className="absolute -top-1.5 -right-1.5 text-[8px] font-bold bg-amber-500/90 text-black px-1.5 py-0.5 rounded-full">PREMIUM</span>
+                      )}
+                      <p className={`text-sm font-semibold mb-0.5 ${transitionStyle === t.id ? "text-accent-400" : "text-primary-100/70"}`}>{t.label}</p>
+                      <p className="text-[10px] text-primary-100/30">{t.desc}</p>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Success Animation Style */}
+              <div className="pt-3">
+                <p className="text-sm font-medium text-primary-100 mb-3 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-accent-500" /> Login Success Style
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  {([
+                    { id: "handshake", label: "Handshake", desc: "Hex rain + ring" },
+                    { id: "decrypt", label: "Decrypt", desc: "Matrix decode" },
+                    { id: "assemble", label: "Assemble", desc: "Fragments fly in", premium: true },
+                  ] as const).map(s => (
+                    <motion.button
+                      key={s.id}
+                      whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                      onClick={() => setSuccessStyle(s.id)}
+                      className={`relative glass-card p-3 rounded-xl border-2 text-left transition-all ${successStyle === s.id ? "border-accent-500/60" : "border-transparent"
+                        }`}
+                    >
+                      {"premium" in s && s.premium && (
+                        <span className="absolute -top-1.5 -right-1.5 text-[8px] font-bold bg-amber-500/90 text-black px-1.5 py-0.5 rounded-full">PREMIUM</span>
+                      )}
+                      <p className={`text-sm font-semibold mb-0.5 ${successStyle === s.id ? "text-accent-400" : "text-primary-100/70"}`}>{s.label}</p>
+                      <p className="text-[10px] text-primary-100/30">{s.desc}</p>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
               <div className="pt-3">
                 <p className="text-sm font-medium text-primary-100 mb-3 flex items-center gap-2">
                   <Gauge className="w-4 h-4 text-accent-500" /> Motion Intensity
