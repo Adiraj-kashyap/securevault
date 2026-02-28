@@ -80,19 +80,31 @@ function applyAll(s: AppearanceState) {
 const AppearanceContext = createContext<AppearanceContextType | undefined>(undefined);
 
 export function AppearanceProvider({ children }: { children: ReactNode }) {
-    const [state, setState] = useState<AppearanceState>(() => {
-        if (typeof window === "undefined") return DEFAULTS;
+    const [state, setState] = useState<AppearanceState>(DEFAULTS);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
         try {
             const saved = localStorage.getItem("sv_appearance");
-            return saved ? { ...DEFAULTS, ...JSON.parse(saved) } : DEFAULTS;
-        } catch { return DEFAULTS; }
-    });
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                setState({ ...DEFAULTS, ...parsed });
+                applyAll({ ...DEFAULTS, ...parsed });
+            } else {
+                applyAll(DEFAULTS);
+            }
+        } catch {
+            applyAll(DEFAULTS);
+        }
+    }, []);
 
     // Persist + apply on every change
     useEffect(() => {
+        if (!mounted) return;
         applyAll(state);
         try { localStorage.setItem("sv_appearance", JSON.stringify(state)); } catch { }
-    }, [state]);
+    }, [state, mounted]);
 
     const update = useCallback(<K extends keyof AppearanceState>(key: K, val: AppearanceState[K]) => {
         setState(prev => ({ ...prev, [key]: val }));

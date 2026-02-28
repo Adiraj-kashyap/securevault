@@ -69,7 +69,8 @@ export default function AuditLogPage() {
 
   useEffect(() => {
     if (!session) return;
-    const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api";
+    const rawUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api";
+    const API_BASE = rawUrl.endsWith('/api') ? rawUrl : `${rawUrl.replace(/\/$/, '')}/api`;
     setLoading(true);
     fetch(`${API_BASE}/audit`, {
       headers: { Authorization: `Bearer ${session.token}` }
@@ -147,11 +148,11 @@ export default function AuditLogPage() {
                 key={s}
                 onClick={() => setFilter(s)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${filter === s
-                    ? s === "all" ? "bg-accent-500 text-primary-900"
-                      : s === "info" ? "bg-safe/20 text-safe border border-safe/30"
-                        : s === "warn" ? "bg-warn/20 text-warn border border-warn/30"
-                          : "bg-danger/20 text-danger border border-danger/30"
-                    : "text-primary-100/40 hover:text-primary-100"
+                  ? s === "all" ? "bg-accent-500 text-primary-900"
+                    : s === "info" ? "bg-safe/20 text-safe border border-safe/30"
+                      : s === "warn" ? "bg-warn/20 text-warn border border-warn/30"
+                        : "bg-danger/20 text-danger border border-danger/30"
+                  : "text-primary-100/40 hover:text-primary-100"
                   }`}
               >
                 {s}

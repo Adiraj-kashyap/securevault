@@ -44,7 +44,8 @@ interface SessionContextType {
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 async function preLockSync(session: VaultSession) {
-    const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
+    const rawUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
+    const base = rawUrl.endsWith('/api') ? rawUrl : `${rawUrl.replace(/\/$/, '')}/api`;
     // 1. Sync appearance preferences to MongoDB
     try {
         const stored = localStorage.getItem("sv_appearance");

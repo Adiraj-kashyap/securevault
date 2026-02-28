@@ -2,7 +2,8 @@ import { auth, database } from './firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { ref, get, set } from 'firebase/database';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
+const rawUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
+const API_BASE_URL = rawUrl.endsWith('/api') ? rawUrl : `${rawUrl.replace(/\/$/, '')}/api`;
 
 export const api = {
     // Authentication Endpoints

@@ -287,7 +287,8 @@ export default function MessagesPage() {
     if (!newTagline.trim() || !session) return;
     setLoadingAction(true);
     try {
-      const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api";
+      const rawUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api";
+      const API_BASE = rawUrl.endsWith('/api') ? rawUrl : `${rawUrl.replace(/\/$/, '')}/api`;
       const res = await fetch(`${API_BASE}/auth/user-by-tagline?tagline=${encodeURIComponent(newTagline.trim())}`, {
         headers: { Authorization: `Bearer ${session.token}` }
       });
