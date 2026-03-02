@@ -223,7 +223,19 @@ function BurstLines({ show }: { show: boolean }) {
     );
 }
 
-/* ─── Main Component — Handshake (original) ───────────────────── */
+/* ─── Main Component — Handshake ─────────────────────────────── */
+/**
+ * Precise timing budget (all in ms from mount):
+ *   0       → Phase 1 starts  (hex rain)
+ *   220     → Phase 2 starts  (scanner beam, 0.5s sweep = done at 720ms)
+ *   380     → Phase 3 starts  (scramble text: "ACCESS  GRANTED" = 15 chars)
+ *              Per char: 3 scrambles × 20ms + 1 lock × 20ms = 80ms
+ *              15 chars × 80ms ≈ 1200ms → text fully assembled at ~1580ms
+ *   1650    → Phase 4 starts  (fingerprint ring: spring + pathLength 0.7s)
+ *   2350    → Phase 5 starts  (burst lines: 0.6s)
+ *   2700    → Phase 6 starts  (implode vignette: 0.45s)
+ *   3050    → onComplete() called → navigate
+ */
 function HandshakeAnimation({
     email,
     isLogin,
@@ -234,23 +246,29 @@ function HandshakeAnimation({
     onComplete: () => void;
 }) {
     const [phase, setPhase] = useState(1);
-    const called = useRef(false);
 
-    // Phase timer chain
-    // 13 non-space chars × ~80ms ≈ 1040ms. Phase 3 starts at 450ms → text done ≈ 1490ms
+    // Lock onComplete in a ref so the effect never re-fires when parent re-renders
+    const onCompleteRef = useRef(onComplete);
+    useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+
+    const hasFired = useRef(false);
+
     useEffect(() => {
         const timers = [
-            setTimeout(() => setPhase(2), 300),   // scanner sweeps
-            setTimeout(() => setPhase(3), 450),   // scramble text starts
-            setTimeout(() => setPhase(4), 1700),  // ring forms (after text done ~1490ms)
-            setTimeout(() => setPhase(5), 2100),  // burst
-            setTimeout(() => setPhase(6), 2400),  // implode
+            setTimeout(() => setPhase(2), 220),   // scanner sweeps
+            setTimeout(() => setPhase(3), 380),   // scramble text
+            setTimeout(() => setPhase(4), 1650),  // ring  (after text ~1580ms)
+            setTimeout(() => setPhase(5), 2350),  // burst
+            setTimeout(() => setPhase(6), 2700),  // implode
             setTimeout(() => {                     // navigate
-                if (!called.current) { called.current = true; onComplete(); }
-            }, 2900),
+                if (!hasFired.current) {
+                    hasFired.current = true;
+                    onCompleteRef.current();
+                }
+            }, 3050),
         ];
         return () => timers.forEach(clearTimeout);
-    }, [onComplete]);
+    }, []); // ← empty deps: runs exactly once on mount
 
     // Rain columns — seeded once
     const cols = useRef(
@@ -319,7 +337,7 @@ function HandshakeAnimation({
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                transition={{ delay: 0.9 }}
+                                transition={{ delay: 1.0 }}
                                 className="text-xs font-code text-primary-100/35 tracking-widest"
                             >
                                 {email.toUpperCase()}
@@ -327,7 +345,7 @@ function HandshakeAnimation({
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                transition={{ delay: 1.1 }}
+                                transition={{ delay: 1.2 }}
                                 className="text-[10px] font-code mt-1 tracking-wider"
                                 style={{ color: "rgba(var(--theme-glow-rgb),0.5)" }}
                             >
@@ -337,13 +355,13 @@ function HandshakeAnimation({
                     )}
                 </AnimatePresence>
 
-                {/* Progress bar */}
+                {/* Progress bar — fills over 1.3s after phase 3 */}
                 <AnimatePresence>
                     {phase >= 3 && (
                         <motion.div
                             initial={{ opacity: 0, scaleX: 0 }}
                             animate={{ opacity: 1, scaleX: 1 }}
-                            transition={{ duration: 1.2, delay: 0.1, ease: "easeOut" }}
+                            transition={{ duration: 1.3, delay: 0.05, ease: "easeOut" }}
                             className="w-48 h-[1px] origin-left"
                             style={{
                                 background: `linear-gradient(90deg, rgba(var(--theme-glow-rgb),0), rgba(var(--theme-glow-rgb),0.9), rgba(var(--theme-glow-rgb),0))`,
@@ -375,12 +393,15 @@ function HandshakeAnimation({
     );
 }
 
+
 /* ─── Decrypt Animation ───────────────────────────────────────── */
 const MATRIX_CHARS = "アイウエオカキクケコ01アBCDEF#@!%&";
 function DecryptAnimation({ email, isLogin, onComplete }: { email: string; isLogin: boolean; onComplete: () => void }) {
     const [progress, setProgress] = useState(0);
     const [done, setDone] = useState(false);
     const called = useRef(false);
+    const onCompleteRef = useRef(onComplete);
+    useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
     useEffect(() => {
         let p = 0;
@@ -391,12 +412,12 @@ function DecryptAnimation({ email, isLogin, onComplete }: { email: string; isLog
                 clearInterval(interval);
                 setDone(true);
                 setTimeout(() => {
-                    if (!called.current) { called.current = true; onComplete(); }
+                    if (!called.current) { called.current = true; onCompleteRef.current(); }
                 }, 800);
             }
         }, 28);
         return () => clearInterval(interval);
-    }, [onComplete]);
+    }, []); // empty deps — runs once on mount
 
     const rows = 20, cols = 40;
     return (
@@ -467,7 +488,16 @@ function DecryptAnimation({ email, isLogin, onComplete }: { email: string; isLog
 
 /* ─── Assemble Animation ──────────────────────────────────────── */
 function AssembleAnimation({ email, isLogin, onComplete }: { email: string; isLogin: boolean; onComplete: () => void }) {
-    const called = useRef(false);
+    const hasFired = useRef(false);
+    const onCompleteRef = useRef(onComplete);
+    useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+
+    useEffect(() => {
+        const t = setTimeout(() => {
+            if (!hasFired.current) { hasFired.current = true; onCompleteRef.current(); }
+        }, 2400);
+        return () => clearTimeout(t);
+    }, []);
     const PIECES = [
         { label: "RSA-2048", from: { x: -300, y: -200 }, delay: 0 },
         { label: "AES-256", from: { x: 300, y: -200 }, delay: 0.08 },
@@ -476,13 +506,6 @@ function AssembleAnimation({ email, isLogin, onComplete }: { email: string; isLo
         { label: isLogin ? "ACCESS" : "VAULT", from: { x: 0, y: -400 }, delay: 0.1 },
         { label: isLogin ? "GRANTED" : "CREATED", from: { x: 0, y: 400 }, delay: 0.2 },
     ];
-
-    useEffect(() => {
-        const t = setTimeout(() => {
-            if (!called.current) { called.current = true; onComplete(); }
-        }, 2400);
-        return () => clearTimeout(t);
-    }, [onComplete]);
 
     return (
         <motion.div
